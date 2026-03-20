@@ -10,23 +10,25 @@
         .tab-active { border-bottom: 3px solid #1e40af; color: #1e40af; font-weight: bold; }
         .hidden { display: none; }
         .filter-btn-active { background-color: #1e40af !important; color: white !important; }
-        input:disabled, select:disabled, button:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.6; }
+        input:disabled, select:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.6; }
         
+        /* CORREÇÃO DO RELATÓRIO DE IMPRESSÃO */
         @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
-            .no-print { display: none !important; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
-            th { background-color: #f4f4f4; -webkit-print-color-adjust: exact; }
+            body { background-color: white !important; }
+            #main-app, #login-screen { display: none !important; } /* Esconde o sistema */
+            #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 12px; }
+            th { background-color: #f4f4f4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .status-pago { color: green; font-weight: bold; }
+            .status-pendente { color: orange; font-style: italic; }
         }
     </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800">
 
-    <div id="print-area" class="hidden bg-white">
-        <h1 class="text-2xl font-bold mb-2 text-center">COMASP T2 - Relatório de Senhas</h1>
+    <div id="print-area" class="hidden">
+        <h1 class="text-2xl font-bold mb-1 text-center">COMASP T2 - Relatório de Controle de Senhas</h1>
         <p class="text-center text-sm mb-6 text-gray-500" id="print-date"></p>
         <table id="print-table">
             <thead>
@@ -36,7 +38,7 @@
                     <th>Lote 1 (Até 2)</th>
                     <th>Lote 2 (Até 1)</th>
                     <th>Total Acumulado</th>
-                    <th>Status de Pagamento</th>
+                    <th>Situação Final</th>
                 </tr>
             </thead>
             <tbody id="print-tbody"></tbody>
@@ -61,11 +63,11 @@
         </div>
     </div>
 
-    <div id="main-app" class="hidden no-print">
+    <div id="main-app" class="hidden">
         <header class="bg-white shadow p-4 flex flex-col md:flex-row justify-between items-center border-b-2 border-blue-800 gap-4">
             <h2 class="text-xl font-bold text-slate-800 uppercase tracking-tighter">Gestão de Senhas <span class="text-blue-600">T2</span></h2>
             <div class="flex items-center gap-4">
-                <button onclick="gerarRelatorio()" class="bg-blue-100 text-blue-700 px-4 py-2 rounded font-bold text-xs hover:bg-blue-200 transition shadow-sm flex items-center gap-2">
+                <button onclick="gerarRelatorio()" class="bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded font-bold text-xs hover:bg-blue-100 transition shadow-sm flex items-center gap-2">
                     🖨️ Imprimir Relatório
                 </button>
                 <div class="border-l pl-4 text-right">
@@ -125,7 +127,6 @@
         let usuarioLogado = null;
         let alunosDB = []; 
 
-        // --- NOVA LÓGICA DE LOGIN (Direto na tabela, sem erro 500) ---
         async function handleLogin() {
             const btn = document.getElementById('btn-entrar');
             const errorEl = document.getElementById('login-error');
@@ -135,13 +136,7 @@
             btn.disabled = true;
             btn.innerText = "Verificando Credenciais...";
 
-            // Consulta diretamente a tabela que acabamos de criar
-            const { data, error } = await _supabase
-                .from('perfis_tesoureiros')
-                .select('*')
-                .eq('cpf', cpfInput)
-                .eq('senha', passInput)
-                .single();
+            const { data, error } = await _supabase.from('perfis_tesoureiros').select('*').eq('cpf', cpfInput).eq('senha', passInput).single();
 
             if (error || !data) {
                 errorEl.innerText = "Acesso Negado: CPF ou Senha incorretos.";
@@ -158,11 +153,8 @@
             }
         }
 
-        function handleLogout() {
-            location.reload();
-        }
+        function handleLogout() { location.reload(); }
 
-        // --- FETCH DE DADOS DO SUPABASE ---
         async function carregarDadosDoBanco() {
             const { data: alunos } = await _supabase.from('alunos_cfo').select('*').order('id', { ascending: true });
             alunosDB = alunos || [];
@@ -172,7 +164,6 @@
             renderLogs(logsData || []);
         }
 
-        // --- INTERFACE ---
         function showTab(tab) {
             document.getElementById('tab-painel').classList.toggle('hidden', tab !== 'painel');
             document.getElementById('tab-logs').classList.toggle('hidden', tab !== 'logs');
@@ -187,7 +178,6 @@
             renderAlunos(pel);
         }
 
-        // --- RENDERIZAR TABELA ---
         function renderAlunos(filtro = 'TODOS') {
             const body = document.getElementById('lista-alunos-body');
             body.innerHTML = '';
@@ -200,6 +190,16 @@
                 
                 const row = document.createElement('tr');
                 row.className = `border-b transition-colors ${!podeEditar ? 'bg-gray-50 opacity-80' : 'hover:bg-blue-50'}`;
+                
+                // HTML do Toggle Switch
+                const getToggle = (campoStatus) => `
+                    <label class="relative inline-flex items-center cursor-pointer mt-2" title="Marcar Pagamento">
+                        <input type="checkbox" class="sr-only peer" ${aluno[campoStatus] ? 'checked' : ''} ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, '${campoStatus}', this.checked)">
+                        <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500 ${!podeEditar ? 'opacity-50' : ''}"></div>
+                        <span class="ml-2 text-[10px] font-bold ${aluno[campoStatus] ? 'text-green-600' : 'text-orange-500'} uppercase">${aluno[campoStatus] ? 'Pago' : 'Pendente'}</span>
+                    </label>
+                `;
+
                 row.innerHTML = `
                     <td class="p-4">
                         <div class="flex items-center gap-2">
@@ -211,30 +211,26 @@
                         </div>
                     </td>
                     <td class="p-4 text-center">
-                        <select ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, 'l1_qtd', this.value)" class="text-xs border rounded p-1 shadow-sm">
+                        <select ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, 'l1_qtd', this.value)" class="text-xs border rounded p-1 shadow-sm w-full max-w-[100px]">
                             <option value="0" ${aluno.l1_qtd == 0 ? 'selected' : ''}>0 senhas</option>
                             <option value="1" ${aluno.l1_qtd == 1 ? 'selected' : ''}>1 senha</option>
                             <option value="2" ${aluno.l1_qtd == 2 ? 'selected' : ''}>2 senhas</option>
                         </select>
-                        <button ${!podeEditar ? 'disabled' : ''} onclick="updateData(${aluno.id}, 'l1_pago', ${!aluno.l1_pago})" 
-                            class="block mx-auto mt-2 text-[9px] px-2 py-1 rounded-full font-bold border transition ${aluno.l1_pago ? 'bg-green-600 text-white border-green-700' : 'bg-white text-orange-500 border-orange-500 hover:bg-orange-50'}">
-                            ${aluno.l1_pago ? 'PAGO' : 'PENDENTE'}
-                        </button>
+                        <br>
+                        ${getToggle('l1_pago')}
                     </td>
                     <td class="p-4 text-center">
-                        <select ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, 'l2_qtd', this.value)" class="text-xs border rounded p-1 shadow-sm">
+                        <select ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, 'l2_qtd', this.value)" class="text-xs border rounded p-1 shadow-sm w-full max-w-[100px]">
                             <option value="0" ${aluno.l2_qtd == 0 ? 'selected' : ''}>0 senhas</option>
                             <option value="1" ${aluno.l2_qtd == 1 ? 'selected' : ''}>1 senha</option>
                         </select>
-                        <button ${!podeEditar ? 'disabled' : ''} onclick="updateData(${aluno.id}, 'l2_pago', ${!aluno.l2_pago})" 
-                            class="block mx-auto mt-2 text-[9px] px-2 py-1 rounded-full font-bold border transition ${aluno.l2_pago ? 'bg-green-600 text-white border-green-700' : 'bg-white text-orange-500 border-orange-500 hover:bg-orange-50'}">
-                            ${aluno.l2_pago ? 'PAGO' : 'PENDENTE'}
-                        </button>
+                        <br>
+                        ${getToggle('l2_pago')}
                     </td>
                     <td class="p-4 font-bold text-blue-900 text-sm">R$ ${total.toLocaleString('pt-BR')}</td>
                     <td class="p-4 text-center">
                         <span class="text-[10px] px-2 py-1 rounded font-bold ${aluno.l1_pago && (aluno.l2_qtd == 0 || aluno.l2_pago) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}">
-                            ${aluno.l1_pago && (aluno.l2_qtd == 0 || aluno.l2_pago) ? 'FINALIZADO' : 'EM ABERTO'}
+                            ${aluno.l1_pago && (aluno.l2_qtd == 0 || aluno.l2_pago) ? '✓ FINALIZADO' : 'EM ABERTO'}
                         </span>
                     </td>
                 `;
@@ -242,39 +238,53 @@
             });
         }
 
-        // --- ATUALIZAR DADOS NO BANCO ---
+        // --- CORREÇÃO DA ATUALIZAÇÃO ---
         async function updateData(alunoId, campo, valor) {
             const index = alunosDB.findIndex(a => a.id === alunoId);
             const aluno = alunosDB[index];
 
             if (usuarioLogado.acesso !== "TODOS" && usuarioLogado.acesso !== aluno.pelotao) {
                 alert("Sem permissão para este pelotão.");
+                const filtroAtual = document.querySelector('.filter-btn-active').innerText;
+                renderAlunos(filtroAtual === 'Todos' ? 'TODOS' : filtroAtual + '/2ª CIA'); // Reverte visualmente
                 return;
             }
 
             const antigo = aluno[campo];
-            const novoValor = (typeof valor === 'string' && (valor === 'true' || valor === 'false')) ? valor === 'true' : parseInt(valor);
+            
+            // Corrige o bug do parseInt no true/false
+            let novoValor;
+            if (typeof valor === 'boolean') {
+                novoValor = valor;
+            } else {
+                novoValor = parseInt(valor);
+            }
             
             if (antigo === novoValor) return;
 
+            // 1. Atualiza localmente
             alunosDB[index][campo] = novoValor;
             const filtroAtual = document.querySelector('.filter-btn-active').innerText;
             renderAlunos(filtroAtual === 'Todos' ? 'TODOS' : filtroAtual + '/2ª CIA');
 
+            // 2. Salva no Supabase
             await _supabase.from('alunos_cfo').update({ [campo]: novoValor }).eq('id', alunoId);
             
+            // 3. Log
             const acaoText = campo.includes('qtd') ? 'Quantidade' : 'Pagamento';
+            const textoAntigo = typeof antigo === 'boolean' ? (antigo ? 'Pago' : 'Pendente') : antigo;
+            const textoNovo = typeof novoValor === 'boolean' ? (novoValor ? 'Pago' : 'Pendente') : novoValor;
+
             await _supabase.from('logs_auditoria').insert({
                 autor: usuarioLogado.nome,
                 aluno: aluno.nome,
-                detalhe: `${acaoText} (${campo}): ${antigo} ➔ ${novoValor}`
+                detalhe: `${acaoText} (${campo}): ${textoAntigo} ➔ ${textoNovo}`
             });
 
             const { data: logsData } = await _supabase.from('logs_auditoria').select('*').order('created_at', { ascending: false }).limit(50);
-            renderLogs(logsData);
+            renderLogs(logsData || []);
         }
 
-        // --- RENDERIZAR LOGS ---
         function renderLogs(logsData) {
             const container = document.getElementById('logs-container');
             container.innerHTML = logsData.length === 0 ? '<p class="text-gray-400 text-sm">Nenhum registro encontrado.</p>' : '';
@@ -293,7 +303,7 @@
             });
         }
 
-        // --- FUNÇÃO DE IMPRESSÃO ---
+        // --- GERAÇÃO DO RELATÓRIO CORRIGIDO ---
         function gerarRelatorio() {
             const filtroAtual = document.querySelector('.filter-btn-active').innerText;
             const filtroTexto = filtroAtual === 'Todos' ? 'TODOS' : filtroAtual + '/2ª CIA';
@@ -305,16 +315,16 @@
 
             alunosParaImprimir.forEach(a => {
                 const total = (a.l1_qtd + a.l2_qtd) * 400;
-                const statusL1 = a.l1_pago ? 'PAGO' : 'Pendente';
-                const statusL2 = a.l2_pago ? 'PAGO' : 'Pendente';
+                const statusL1 = a.l1_pago ? '<span class="status-pago">Pago</span>' : '<span class="status-pendente">Pendente</span>';
+                const statusL2 = a.l2_pago ? '<span class="status-pago">Pago</span>' : '<span class="status-pendente">Pendente</span>';
                 const quitado = a.l1_pago && (a.l2_qtd == 0 || a.l2_pago) ? 'FINALIZADO' : 'EM ABERTO';
 
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${a.id}</b> - ${a.nome}</td>
                         <td>${a.pelotao}</td>
-                        <td>${a.l1_qtd} senha(s) - <i>${statusL1}</i></td>
-                        <td>${a.l2_qtd} senha(s) - <i>${statusL2}</i></td>
+                        <td>${a.l1_qtd} senhas - ${statusL1}</td>
+                        <td>${a.l2_qtd} senhas - ${statusL2}</td>
                         <td><b>R$ ${total.toLocaleString('pt-BR')}</b></td>
                         <td><strong>${quitado}</strong></td>
                     </tr>
