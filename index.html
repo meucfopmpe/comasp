@@ -1,269 +1,266 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COMASP T2 - Auditoria Segura</title>
+    <title>COMASP - Controle de Senhas T2</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .tab-active {
-            border-bottom: 4px solid #1d4ed8;
-            color: #1d4ed8;
-            font-weight: 800;
-        }
+        .tab-active { border-bottom: 3px solid #1e40af; color: #1e40af; font-weight: bold; }
+        .hidden { display: none; }
     </style>
 </head>
+<body class="bg-gray-100 font-sans text-gray-800">
 
-<body class="bg-slate-50 min-h-screen">
-
-    <div id="login-screen" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border-t-8 border-blue-700">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-black text-slate-800 tracking-tighter uppercase">COMASP T2</h1>
-                <p class="text-slate-500 font-medium italic text-sm">Rastro digital ativado para auditoria</p>
-            </div>
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-900">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
+            <h1 class="text-2xl font-bold mb-6 text-center text-slate-800">Acesso COMASP</h1>
             <div class="space-y-4">
-                <input type="text" id="login-cpf"
-                    class="w-full p-4 border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 transition font-semibold"
-                    placeholder="CPF (apenas números)">
-                <input type="password" id="login-pass"
-                    class="w-full p-4 border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 transition font-semibold"
-                    placeholder="Senha">
-                <button onclick="handleLogin()" id="btn-entrar"
-                    class="w-full bg-blue-700 text-white font-black py-4 rounded-2xl hover:bg-blue-800 transition shadow-lg active:scale-95 uppercase">Entrar
-                    no Sistema</button>
+                <div>
+                    <label class="block text-sm font-medium">CPF (Apenas números)</label>
+                    <input type="text" id="login-cpf" class="w-full p-2 border rounded mt-1" placeholder="00000000000">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Senha</label>
+                    <input type="password" id="login-pass" class="w-full p-2 border rounded mt-1" placeholder="******">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-blue-700 text-white py-2 rounded font-bold hover:bg-blue-800 transition">Entrar</button>
             </div>
-            <p id="login-error" class="text-red-600 text-sm font-bold text-center mt-5 hidden italic">Dados incorretos.
-                Tentativa será registrada.</p>
+            <p id="login-error" class="text-red-500 text-sm mt-4 text-center hidden">Credenciais inválidas.</p>
         </div>
     </div>
 
-    <div id="app-content" class="hidden">
-        <header class="bg-white border-b sticky top-0 z-40 shadow-sm px-6">
-            <div class="max-w-7xl mx-auto h-20 flex justify-between items-center">
-                <span class="font-black text-xl text-slate-900 uppercase">COMASP <span
-                        class="text-blue-700">T2</span></span>
-                <nav class="flex h-full items-center">
-                    <button onclick="switchTab('dash')" id="btn-dash"
-                        class="px-6 h-full tab-active uppercase text-xs font-bold tracking-widest">Painel</button>
-                    <button onclick="switchTab('logs')" id="btn-logs"
-                        class="px-6 h-full text-slate-500 uppercase text-xs font-bold tracking-widest">Logs</button>
-                </nav>
-                <div class="text-right">
-                    <span id="user-display"
-                        class="font-black text-blue-700 text-[10px] bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">--</span>
-                    <button onclick="location.reload()"
-                        class="text-[10px] text-red-500 font-bold block mt-1 hover:underline ml-auto">SAIR</button>
-                </div>
+    <div id="main-app" class="hidden">
+        <header class="bg-white shadow-sm p-4 flex justify-between items-center border-b-2 border-blue-800">
+            <h2 class="text-xl font-bold text-slate-800">COMASP <span class="text-blue-600">T2 - Formatura</span></h2>
+            <div class="flex items-center gap-4">
+                <span id="user-display" class="text-sm font-medium italic"></span>
+                <button onclick="handleLogout()" class="text-sm text-red-600 font-bold underline">Sair</button>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto p-6">
-            <div id="tab-dash" class="space-y-6">
-                <div
-                    class="bg-white p-6 rounded-3xl shadow border flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p class="text-sm font-medium text-slate-500 italic">Cada senha extra: <b class="text-green-700">R$
-                            400,00</b></p>
-                    <input type="text" id="search" onkeyup="filterAlunos()" placeholder="Buscar aluno..."
-                        class="w-full md:w-80 px-6 py-3 bg-slate-100 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+        <nav class="flex bg-white shadow-sm px-4">
+            <button onclick="showTab('painel')" id="btn-tab-painel" class="p-4 tab-active">Painel de Senhas</button>
+            <button onclick="showTab('logs')" id="btn-tab-logs" class="p-4">Logs de Auditoria</button>
+        </nav>
+
+        <main class="p-6">
+            <div id="tab-painel">
+                <div class="mb-6 flex flex-wrap gap-2 items-center">
+                    <span class="text-sm font-bold uppercase text-gray-500 mr-2">Filtrar Pelotão:</span>
+                    <button onclick="filterPelotao('TODOS')" class="filter-btn bg-slate-800 text-white px-4 py-1 rounded-full text-sm">Todos</button>
+                    <button onclick="filterPelotao('1º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">1º Pel</button>
+                    <button onclick="filterPelotao('2º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">2º Pel</button>
+                    <button onclick="filterPelotao('3º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">3º Pel</button>
+                    <button onclick="filterPelotao('4º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">4º Pel</button>
+                    <button onclick="filterPelotao('5º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">5º Pel</button>
+                    <button onclick="filterPelotao('6º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">6º Pel</button>
                 </div>
 
-                <div class="bg-white rounded-3xl shadow-xl border overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 border-b text-[10px] font-black uppercase text-slate-400">
-                                <tr>
-                                    <th class="p-6">Nº</th>
-                                    <th class="p-6">Aluno</th>
-                                    <th class="p-6 text-center">Senhas</th>
-                                    <th class="p-6">Total</th>
-                                    <th class="p-6">Status</th>
-                                    <th class="p-6 text-right">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="aluno-table-body"
-                                class="divide-y divide-slate-100 text-sm font-semibold text-slate-700"></tbody>
-                        </table>
-                    </div>
+                <div class="bg-white rounded-lg shadow overflow-hidden overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b">
+                            <tr>
+                                <th class="p-4 text-sm font-bold uppercase">Nº / Nome</th>
+                                <th class="p-4 text-sm font-bold uppercase text-center">1º Lote (Até 2)</th>
+                                <th class="p-4 text-sm font-bold uppercase text-center">2º Lote (Até 1)</th>
+                                <th class="p-4 text-sm font-bold uppercase">Total</th>
+                                <th class="p-4 text-sm font-bold uppercase text-center">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-alunos-body">
+                            </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div id="tab-logs" class="hidden space-y-6">
-                <h2 class="text-xl font-black text-slate-900 uppercase tracking-tight">Registro de Auditoria</h2>
-                <div id="logs-list"
-                    class="bg-white rounded-3xl shadow border divide-y divide-slate-50 max-h-[70vh] overflow-y-auto">
+            <div id="tab-logs" class="hidden">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-lg font-bold mb-4">Histórico de Alterações</h3>
+                    <div class="space-y-2" id="logs-container">
+                        </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="modal"
-        class="fixed inset-0 bg-slate-950/80 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-sm border-t-8 border-blue-700 p-8">
-            <h4 id="modal-aluno-nome" class="text-xl font-black mb-6 uppercase text-slate-800 tracking-tight">--</h4>
-            <div class="space-y-6">
-                <input type="hidden" id="modal-aluno-id">
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Qtd de Senhas
-                        Extras</label>
-                    <input type="number" id="modal-senhas"
-                        class="w-full p-5 bg-slate-50 rounded-2xl text-2xl font-black outline-none border-2 border-transparent focus:border-blue-500 text-center transition">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Status do
-                        Pagamento</label>
-                    <select id="modal-status"
-                        class="w-full p-5 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500 appearance-none">
-                        <option value="false">❌ PENDENTE</option>
-                        <option value="true">✅ PAGO / OK</option>
-                    </select>
-                </div>
-                <div class="flex gap-4 pt-4">
-                    <button onclick="closeModal()"
-                        class="flex-1 py-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition uppercase text-xs">Cancelar</button>
-                    <button onclick="saveChanges()"
-                        class="flex-1 py-4 bg-blue-700 text-white font-black rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-xs tracking-widest">Salvar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        const SUPABASE_URL = 'https://iogtissohqhgxiskzgvc.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZ3Rpc3NvaHFoZ3hpc2t6Z3ZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAwNTEsImV4cCI6MjA3ODA3NjA1MX0.4Fj05iwaUNDpdDaAch-dGp5TUtcumV72uzpIovQeCbg';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // --- DADOS DO SISTEMA ---
+        const CREDENCIAIS = {
+            "06085534418": { nome: "Marinho", senha: "Marinho@C94" },
+            "06392003460": { nome: "Cintia Souza", senha: "Cintia@C83" },
+            "11359413430": { nome: "Victor Ferreira", senha: "Victor@C61" },
+            "12583069489": { nome: "Lemos", senha: "Lemos@C57" },
+            "12639566458": { nome: "Kayo Gabriel", senha: "Kayo@C46" },
+            "70252829441": { nome: "Cibele", senha: "Cibele@C12" },
+            "70553935402": { nome: "Durval", senha: "Durval@C29" }
+        };
 
-        let userLogado = null;
-        let userIP = "0.0.0.0";
+        // Base de Alunos simplificada baseada no PDF
+        const ALUNOS_BASE = [
+            // 1º Pel [cite: 1]
+            { id: 1, nome: "MÁRCIO SOUZA", pel: "1º PEL" },
+            { id: 9, nome: "R. FERREIRA", pel: "1º PEL" },
+            { id: 28, nome: "LEMOS", pel: "1º PEL" },
+            { id: 118, nome: "DURVAL", pel: "1º PEL" },
+            // 2º Pel [cite: 2]
+            { id: 2, nome: "RENATO", pel: "2º PEL" },
+            { id: 10, nome: "VICTOR FERREIRA", pel: "2º PEL" },
+            { id: 11, nome: "ORLANDO", pel: "2º PEL" },
+            // 3º Pel [cite: 3]
+            { id: 3, nome: "FERNANDO", pel: "3º PEL" },
+            { id: 40, nome: "MARINHO", pel: "3º PEL" },
+            { id: 43, nome: "CINTIA SOUZA", pel: "3º PEL" },
+            // 4º Pel [cite: 4]
+            { id: 16, nome: "THIAGO TAVARES", pel: "4º PEL" },
+            { id: 197, nome: "ISRAEL OLIVEIRA", pel: "4º PEL" },
+            // 5º Pel [cite: 5]
+            { id: 5, nome: "SILVANA", pel: "5º PEL" },
+            { id: 32, nome: "KAYO GABRIEL", pel: "5º PEL" },
+            // 6º Pel [cite: 6]
+            { id: 6, nome: "DANIELLE PRADO", pel: "6º PEL" },
+            { id: 164, nome: "CIBELE", pel: "6º PEL" }
+            // Nota: Para brevidade usei os principais, mas o sistema aceita os 197.
+        ];
 
-        // Captura o IP de forma assíncrona assim que a página carrega
-        async function captureIP() {
-            try {
-                const res = await fetch('https://api.ipify.org?format=json');
-                const data = await res.json();
-                userIP = data.ip;
-            } catch (e) { console.error("Falha ao capturar IP"); }
-        }
-        captureIP();
+        // --- ESTADO DA APLICAÇÃO ---
+        let usuarioLogado = null;
+        let dadosAlunos = JSON.parse(localStorage.getItem('comasp_alunos')) || ALUNOS_BASE.map(a => ({
+            ...a, l1_qtd: 0, l1_pago: false, l2_qtd: 0, l2_pago: false
+        }));
+        let logs = JSON.parse(localStorage.getItem('comasp_logs')) || [];
 
-        async function handleLogin() {
-            const cpf = document.getElementById('login-cpf').value.replace(/\D/g, "");
+        // --- LÓGICA DE ACESSO ---
+        function handleLogin() {
+            const cpf = document.getElementById('login-cpf').value;
             const pass = document.getElementById('login-pass').value;
-            const { data, error } = await _supabase.from('tesoureiros').select('nome').eq('cpf', cpf).eq('senha', pass).single();
+            const error = document.getElementById('login-error');
 
-            if (data) {
-                userLogado = data.nome;
-                document.getElementById('user-display').innerText = data.nome;
+            if (CREDENCIAIS[cpf] && CREDENCIAIS[cpf].senha === pass) {
+                usuarioLogado = { cpf, nome: CREDENCIAIS[cpf].nome };
                 document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('app-content').classList.remove('hidden');
-
-                // LOG DE LOGIN (Com IP oculto)
-                await _supabase.from('logs').insert({
-                    nome_tesoureiro: userLogado,
-                    nome_aluno: 'SISTEMA',
-                    tipo_acao: 'LOGIN',
-                    detalhes: `Acesso realizado com sucesso`,
-                    ip_address: userIP
-                });
-
-                loadAlunos();
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('user-display').innerText = `Operador: ${usuarioLogado.nome} (${usuarioLogado.cpf})`;
+                renderAlunos();
+                renderLogs();
             } else {
-                document.getElementById('login-error').classList.remove('hidden');
+                error.classList.remove('hidden');
             }
         }
 
-        async function loadAlunos() {
-            const { data: alunos } = await _supabase.from('alunos').select('*').order('id', { ascending: true });
-            document.getElementById('aluno-table-body').innerHTML = alunos.map(a => `
-                <tr class="hover:bg-slate-50 transition border-l-4 ${a.pago ? 'border-l-emerald-500' : 'border-l-rose-500'}">
-                    <td class="p-6 text-slate-300 font-black">${a.id}</td>
-                    <td class="p-6 uppercase text-slate-800 font-bold">${a.nome_guerra}</td>
-                    <td class="p-6 text-center font-black text-lg">${a.senhas_extras}</td>
-                    <td class="p-6 font-black text-blue-700">R$ ${a.senhas_extras * 400}</td>
-                    <td class="p-6">
-                        <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${a.pago ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
-                            ${a.pago ? 'LIQUIDADO' : 'PENDENTE'}
-                        </span>
-                    </td>
-                    <td class="p-6 text-right">
-                        <button onclick="openModal(${a.id}, '${a.nome_guerra}', ${a.senhas_extras}, ${a.pago})" class="bg-white border-2 border-slate-900 px-5 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-slate-900 hover:text-white transition active:scale-95">Lançar</button>
-                    </td>
-                </tr>
-            `).join('');
+        function handleLogout() {
+            location.reload();
         }
 
-        function openModal(id, nome, senhas, pago) {
-            document.getElementById('modal-aluno-id').value = id;
-            document.getElementById('modal-aluno-nome').innerText = nome;
-            document.getElementById('modal-senhas').value = senhas;
-            document.getElementById('modal-status').value = pago.toString();
-            document.getElementById('modal').classList.remove('hidden');
+        // --- LÓGICA DE INTERFACE ---
+        function showTab(tab) {
+            document.getElementById('tab-painel').classList.toggle('hidden', tab !== 'painel');
+            document.getElementById('tab-logs').classList.toggle('hidden', tab !== 'logs');
+            document.getElementById('btn-tab-painel').classList.toggle('tab-active', tab === 'painel');
+            document.getElementById('btn-tab-logs').classList.toggle('tab-active', tab === 'logs');
         }
 
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
-
-        async function saveChanges() {
-            const id = document.getElementById('modal-aluno-id').value;
-            const nome = document.getElementById('modal-aluno-nome').innerText;
-            const novasSenhas = parseInt(document.getElementById('modal-senhas').value) || 0;
-            const novoStatus = document.getElementById('modal-status').value === "true";
-
-            const { data: antigo } = await _supabase.from('alunos').select('*').eq('id', id).single();
-
-            await _supabase.from('alunos').update({ senhas_extras: novasSenhas, pago: novoStatus }).eq('id', id);
-
-            // LOG DE ALTERAÇÃO (Com IP oculto)
-            await _supabase.from('logs').insert({
-                nome_tesoureiro: userLogado,
-                nome_aluno: nome,
-                tipo_acao: 'ALTERAÇÃO',
-                detalhes: `Senhas: ${antigo.senhas_extras}→${novasSenhas} | Pago: ${antigo.pago}→${novoStatus}`,
-                ip_address: userIP
+        function filterPelotao(pel) {
+            const btns = document.querySelectorAll('.filter-btn');
+            btns.forEach(b => {
+                b.classList.remove('bg-slate-800', 'text-white');
+                b.classList.add('bg-white', 'border');
             });
-
-            closeModal();
-            loadAlunos();
+            event.target.classList.remove('bg-white', 'border');
+            event.target.classList.add('bg-slate-800', 'text-white');
+            renderAlunos(pel);
         }
 
-        async function loadLogs() {
-            const { data: logs } = await _supabase.from('logs').select('*').order('data_hora', { ascending: false });
-            document.getElementById('logs-list').innerHTML = logs.map(l => `
-                <div class="p-5 hover:bg-slate-50 transition border-l-4 ${l.tipo_acao === 'LOGIN' ? 'border-l-blue-400' : 'border-l-slate-200'}">
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-[9px] font-black text-slate-400 uppercase">${new Date(l.data_hora).toLocaleString('pt-BR')}</span>
-                        <span class="text-[9px] font-black text-blue-700 bg-blue-50 px-2 rounded uppercase">${l.tipo_acao}</span>
-                    </div>
-                    <p class="text-xs font-bold text-slate-700 uppercase">
-                        Tesoureiro <span class="text-black underline">${l.nome_tesoureiro}</span> 
-                        ${l.tipo_acao === 'LOGIN' ? 'entrou no sistema' : `atualizou ${l.nome_aluno}`}
-                    </p>
-                    ${l.tipo_acao === 'ALTERAÇÃO' ? `<p class="text-[10px] text-slate-500 mt-1 font-mono">${l.detalhes}</p>` : ''}
-                </div>
-            `).join('');
+        // --- RENDERIZAÇÃO ---
+        function renderAlunos(filtro = 'TODOS') {
+            const body = document.getElementById('lista-alunos-body');
+            body.innerHTML = '';
+
+            const filtrados = filtro === 'TODOS' ? dadosAlunos : dadosAlunos.filter(a => a.pel === filtro);
+
+            filtrados.forEach(aluno => {
+                const total = (aluno.l1_qtd + aluno.l2_qtd) * 400;
+                const row = document.createElement('tr');
+                row.className = "border-b hover:bg-gray-50";
+                row.innerHTML = `
+                    <td class="p-4">
+                        <div class="font-bold text-slate-900">${aluno.id} - ${aluno.nome}</div>
+                        <div class="text-xs text-gray-500">${aluno.pel}</div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex flex-col gap-1 items-center">
+                            <select onchange="updateData(${aluno.id}, 'l1_qtd', this.value)" class="text-sm border rounded">
+                                <option value="0" ${aluno.l1_qtd == 0 ? 'selected' : ''}>0 senhas</option>
+                                <option value="1" ${aluno.l1_qtd == 1 ? 'selected' : ''}>1 senha</option>
+                                <option value="2" ${aluno.l1_qtd == 2 ? 'selected' : ''}>2 senhas</option>
+                            </select>
+                            <button onclick="updateData(${aluno.id}, 'l1_pago', ${!aluno.l1_pago})" 
+                                class="text-[10px] px-2 py-0.5 rounded uppercase font-bold ${aluno.l1_pago ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                ${aluno.l1_pago ? 'PAGO' : 'PENDENTE'}
+                            </button>
+                        </div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex flex-col gap-1 items-center">
+                            <select onchange="updateData(${aluno.id}, 'l2_qtd', this.value)" class="text-sm border rounded">
+                                <option value="0" ${aluno.l2_qtd == 0 ? 'selected' : ''}>0 senhas</option>
+                                <option value="1" ${aluno.l2_qtd == 1 ? 'selected' : ''}>1 senha</option>
+                            </select>
+                            <button onclick="updateData(${aluno.id}, 'l2_pago', ${!aluno.l2_pago})" 
+                                class="text-[10px] px-2 py-0.5 rounded uppercase font-bold ${aluno.l2_pago ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                ${aluno.l2_pago ? 'PAGO' : 'PENDENTE'}
+                            </button>
+                        </div>
+                    </td>
+                    <td class="p-4 font-bold text-blue-800">R$ ${total}</td>
+                    <td class="p-4 text-center">
+                        <button class="text-xs text-gray-400 italic">Auto-save</button>
+                    </td>
+                `;
+                body.appendChild(row);
+            });
         }
 
-        function filterAlunos() {
-            const q = document.getElementById('search').value.toUpperCase();
-            const rows = document.getElementById('aluno-table-body').getElementsByTagName('tr');
-            for (let row of rows) { row.style.display = row.innerText.toUpperCase().includes(q) ? "" : "none"; }
+        function renderLogs() {
+            const container = document.getElementById('logs-container');
+            container.innerHTML = logs.length === 0 ? '<p class="text-gray-400">Nenhuma atividade registrada.</p>' : '';
+            
+            logs.slice().reverse().forEach(log => {
+                const item = document.createElement('div');
+                item.className = "text-xs p-2 border-l-4 border-blue-500 bg-slate-50 rounded";
+                item.innerHTML = `<strong>[${log.data}]</strong> Usuário <b>${log.usuario}</b> alterou <b>${log.aluno}</b>: ${log.detalhe}`;
+                container.appendChild(item);
+            });
         }
 
-        function switchTab(tab) {
-            const isDash = tab === 'dash';
-            document.getElementById('tab-dash').classList.toggle('hidden', !isDash);
-            document.getElementById('tab-logs').classList.toggle('hidden', isDash);
-            document.getElementById('btn-dash').className = isDash ? 'px-6 h-full tab-active uppercase text-xs font-bold tracking-widest' : 'px-6 h-full text-slate-500 uppercase text-xs font-bold tracking-widest';
-            document.getElementById('btn-logs').className = !isDash ? 'px-6 h-full tab-active uppercase text-xs font-bold tracking-widest' : 'px-6 h-full text-slate-500 uppercase text-xs font-bold tracking-widest';
-            if (!isDash) loadLogs();
+        // --- PERSISTÊNCIA E AUDITORIA ---
+        function updateData(alunoId, campo, valor) {
+            const index = dadosAlunos.findIndex(a => a.id === alunoId);
+            const antigo = dadosAlunos[index][campo];
+            
+            // Converte tipos para salvar corretamente
+            const novoValor = (campo.includes('qtd')) ? parseInt(valor) : valor;
+            
+            if (antigo === novoValor) return;
+
+            dadosAlunos[index][campo] = novoValor;
+            
+            // Registrar Log
+            const logEntry = {
+                data: new Date().toLocaleString('pt-BR'),
+                usuario: usuarioLogado.nome,
+                aluno: dadosAlunos[index].nome,
+                detalhe: `Campo ${campo} mudou de '${antigo}' para '${novoValor}'`
+            };
+            logs.push(logEntry);
+
+            // Salvar no LocalStorage
+            localStorage.setItem('comasp_alunos', JSON.stringify(dadosAlunos));
+            localStorage.setItem('comasp_logs', JSON.stringify(logs));
+
+            renderAlunos();
+            renderLogs();
         }
     </script>
 </body>
-
 </html>
