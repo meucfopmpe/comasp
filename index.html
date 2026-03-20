@@ -12,7 +12,6 @@
         .filter-btn-active { background-color: #1e40af !important; color: white !important; }
         input:disabled, select:disabled, button:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.6; }
         
-        /* ESTILO ESPECÍFICO PARA A HORA DA IMPRESSÃO */
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
@@ -119,7 +118,6 @@
     </div>
 
     <script>
-        // --- CONEXÃO COM O SUPABASE ---
         const SUPABASE_URL = "https://iogtissohqhgxiskzgvc.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZ3Rpc3NvaHFoZ3hpc2t6Z3ZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAwNTEsImV4cCI6MjA3ODA3NjA1MX0.4Fj05iwaUNDpdDaAch-dGp5TUtcumV72uzpIovQeCbg";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -127,7 +125,7 @@
         let usuarioLogado = null;
         let alunosDB = []; 
 
-        // --- LÓGICA DE LOGIN ---
+        // --- NOVA LÓGICA DE LOGIN (Direto na tabela, sem erro 500) ---
         async function handleLogin() {
             const btn = document.getElementById('btn-entrar');
             const errorEl = document.getElementById('login-error');
@@ -137,48 +135,44 @@
             btn.disabled = true;
             btn.innerText = "Verificando Credenciais...";
 
-            const { data, error } = await _supabase.auth.signInWithPassword({
-                email: `${cpfInput}@comasp.com`,
-                password: passInput
-            });
+            // Consulta diretamente a tabela que acabamos de criar
+            const { data, error } = await _supabase
+                .from('perfis_tesoureiros')
+                .select('*')
+                .eq('cpf', cpfInput)
+                .eq('senha', passInput)
+                .single();
 
-            if (error) {
+            if (error || !data) {
                 errorEl.innerText = "Acesso Negado: CPF ou Senha incorretos.";
                 errorEl.classList.remove('hidden');
                 btn.disabled = false;
                 btn.innerText = "Entrar no Sistema";
             } else {
-                // Busca as permissões do usuário no banco
-                const { data: perfil } = await _supabase.from('perfis_tesoureiros').select('*').eq('id', data.user.id).single();
-                usuarioLogado = perfil;
-                
+                usuarioLogado = data;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('user-display').innerText = usuarioLogado.nome;
                 document.getElementById('user-role').innerText = usuarioLogado.cargo;
-                
                 carregarDadosDoBanco();
             }
         }
 
         function handleLogout() {
-            _supabase.auth.signOut();
             location.reload();
         }
 
         // --- FETCH DE DADOS DO SUPABASE ---
         async function carregarDadosDoBanco() {
-            // Busca Alunos
             const { data: alunos } = await _supabase.from('alunos_cfo').select('*').order('id', { ascending: true });
-            alunosDB = alunos;
+            alunosDB = alunos || [];
             renderAlunos();
 
-            // Busca Logs
             const { data: logsData } = await _supabase.from('logs_auditoria').select('*').order('created_at', { ascending: false }).limit(50);
             renderLogs(logsData || []);
         }
 
-        // --- INTERFACE E NAVEGAÇÃO ---
+        // --- INTERFACE ---
         function showTab(tab) {
             document.getElementById('tab-painel').classList.toggle('hidden', tab !== 'painel');
             document.getElementById('tab-logs').classList.toggle('hidden', tab !== 'logs');
@@ -193,7 +187,7 @@
             renderAlunos(pel);
         }
 
-        // --- RENDERIZAR TABELA NA TELA ---
+        // --- RENDERIZAR TABELA ---
         function renderAlunos(filtro = 'TODOS') {
             const body = document.getElementById('lista-alunos-body');
             body.innerHTML = '';
@@ -263,23 +257,19 @@
             
             if (antigo === novoValor) return;
 
-            // 1. Atualiza na tela (Otimista)
             alunosDB[index][campo] = novoValor;
             const filtroAtual = document.querySelector('.filter-btn-active').innerText;
             renderAlunos(filtroAtual === 'Todos' ? 'TODOS' : filtroAtual + '/2ª CIA');
 
-            // 2. Salva no Supabase
             await _supabase.from('alunos_cfo').update({ [campo]: novoValor }).eq('id', alunoId);
             
-            // 3. Registra Log
             const acaoText = campo.includes('qtd') ? 'Quantidade' : 'Pagamento';
             await _supabase.from('logs_auditoria').insert({
                 autor: usuarioLogado.nome,
                 aluno: aluno.nome,
-                detalhe: `${acaoText} (${campo}) atualizado: ${antigo} ➔ ${novoValor}`
+                detalhe: `${acaoText} (${campo}): ${antigo} ➔ ${novoValor}`
             });
 
-            // Atualiza os logs na tela
             const { data: logsData } = await _supabase.from('logs_auditoria').select('*').order('created_at', { ascending: false }).limit(50);
             renderLogs(logsData);
         }
@@ -303,9 +293,8 @@
             });
         }
 
-        // --- FUNÇÃO DE IMPRESSÃO (RELATÓRIO) ---
+        // --- FUNÇÃO DE IMPRESSÃO ---
         function gerarRelatorio() {
-            // Pega o pelotão selecionado atualmente para imprimir só ele (ou Todos)
             const filtroAtual = document.querySelector('.filter-btn-active').innerText;
             const filtroTexto = filtroAtual === 'Todos' ? 'TODOS' : filtroAtual + '/2ª CIA';
             const alunosParaImprimir = filtroTexto === 'TODOS' ? alunosDB : alunosDB.filter(a => a.pelotao === filtroTexto);
@@ -332,7 +321,6 @@
                 `;
             });
 
-            // Chama o comando de impressão do navegador (vai ocultar o site e mostrar só a tabela branca)
             window.print();
         }
     </script>
