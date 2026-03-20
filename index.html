@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COMASP T2 - Sistema de Auditoria</title>
+    <title>COMASP T2 - Auditoria Segura</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border-t-8 border-blue-700">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-black text-slate-800 tracking-tighter uppercase">COMASP T2</h1>
-                <p class="text-slate-500 font-medium">Controle de Senhas Extras</p>
+                <p class="text-slate-500 font-medium italic text-sm">Rastro digital ativado para auditoria</p>
             </div>
             <div class="space-y-4">
                 <input type="text" id="login-cpf"
@@ -37,16 +37,17 @@
                     class="w-full p-4 border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 transition font-semibold"
                     placeholder="Senha">
                 <button onclick="handleLogin()" id="btn-entrar"
-                    class="w-full bg-blue-700 text-white font-black py-4 rounded-2xl hover:bg-blue-800 transition shadow-lg active:scale-95 uppercase">Entrar</button>
+                    class="w-full bg-blue-700 text-white font-black py-4 rounded-2xl hover:bg-blue-800 transition shadow-lg active:scale-95 uppercase">Entrar
+                    no Sistema</button>
             </div>
-            <p id="login-error" class="text-red-600 text-sm font-bold text-center mt-5 hidden italic">Acesso negado.
-                Verifique os dados.</p>
+            <p id="login-error" class="text-red-600 text-sm font-bold text-center mt-5 hidden italic">Dados incorretos.
+                Tentativa será registrada.</p>
         </div>
     </div>
 
     <div id="app-content" class="hidden">
-        <header class="bg-white border-b sticky top-0 z-40 shadow-sm">
-            <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+        <header class="bg-white border-b sticky top-0 z-40 shadow-sm px-6">
+            <div class="max-w-7xl mx-auto h-20 flex justify-between items-center">
                 <span class="font-black text-xl text-slate-900 uppercase">COMASP <span
                         class="text-blue-700">T2</span></span>
                 <nav class="flex h-full items-center">
@@ -57,9 +58,9 @@
                 </nav>
                 <div class="text-right">
                     <span id="user-display"
-                        class="font-black text-blue-700 text-[10px] bg-blue-50 px-3 py-1 rounded-full uppercase">--</span>
+                        class="font-black text-blue-700 text-[10px] bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">--</span>
                     <button onclick="location.reload()"
-                        class="text-[10px] text-red-500 font-bold block mt-1 hover:underline">SAIR</button>
+                        class="text-[10px] text-red-500 font-bold block mt-1 hover:underline ml-auto">SAIR</button>
                 </div>
             </div>
         </header>
@@ -87,15 +88,15 @@
                                     <th class="p-6 text-right">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="aluno-table-body" class="divide-y divide-slate-100 text-sm font-semibold">
-                            </tbody>
+                            <tbody id="aluno-table-body"
+                                class="divide-y divide-slate-100 text-sm font-semibold text-slate-700"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
             <div id="tab-logs" class="hidden space-y-6">
-                <h2 class="text-xl font-black text-slate-900">Histórico de Auditoria</h2>
+                <h2 class="text-xl font-black text-slate-900 uppercase tracking-tight">Registro de Auditoria</h2>
                 <div id="logs-list"
                     class="bg-white rounded-3xl shadow border divide-y divide-slate-50 max-h-[70vh] overflow-y-auto">
                 </div>
@@ -105,30 +106,30 @@
 
     <div id="modal"
         class="fixed inset-0 bg-slate-950/80 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm border-t-8 border-blue-700 p-8">
-            <h4 id="modal-aluno-nome" class="text-xl font-black mb-6 uppercase text-slate-800">--</h4>
+        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-sm border-t-8 border-blue-700 p-8">
+            <h4 id="modal-aluno-nome" class="text-xl font-black mb-6 uppercase text-slate-800 tracking-tight">--</h4>
             <div class="space-y-6">
                 <input type="hidden" id="modal-aluno-id">
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Qtd de Senhas
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Qtd de Senhas
                         Extras</label>
                     <input type="number" id="modal-senhas"
-                        class="w-full p-4 bg-slate-100 rounded-2xl text-2xl font-black outline-none border-2 border-transparent focus:border-blue-500 text-center">
+                        class="w-full p-5 bg-slate-50 rounded-2xl text-2xl font-black outline-none border-2 border-transparent focus:border-blue-500 text-center transition">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Status do
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Status do
                         Pagamento</label>
                     <select id="modal-status"
-                        class="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500">
-                        <option value="false">🔴 PENDENTE</option>
-                        <option value="true">🟢 PAGO / OK</option>
+                        class="w-full p-5 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500 appearance-none">
+                        <option value="false">❌ PENDENTE</option>
+                        <option value="true">✅ PAGO / OK</option>
                     </select>
                 </div>
                 <div class="flex gap-4 pt-4">
                     <button onclick="closeModal()"
-                        class="flex-1 py-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition">CANCELAR</button>
+                        class="flex-1 py-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition uppercase text-xs">Cancelar</button>
                     <button onclick="saveChanges()"
-                        class="flex-1 py-4 bg-blue-700 text-white font-black rounded-2xl shadow-lg">SALVAR</button>
+                        class="flex-1 py-4 bg-blue-700 text-white font-black rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-xs tracking-widest">Salvar</button>
                 </div>
             </div>
         </div>
@@ -139,18 +140,39 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZ3Rpc3NvaHFoZ3hpc2t6Z3ZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAwNTEsImV4cCI6MjA3ODA3NjA1MX0.4Fj05iwaUNDpdDaAch-dGp5TUtcumV72uzpIovQeCbg';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let tesoureiroLogado = null;
+        let userLogado = null;
+        let userIP = "0.0.0.0";
+
+        // Captura o IP de forma assíncrona assim que a página carrega
+        async function captureIP() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                userIP = data.ip;
+            } catch (e) { console.error("Falha ao capturar IP"); }
+        }
+        captureIP();
 
         async function handleLogin() {
             const cpf = document.getElementById('login-cpf').value.replace(/\D/g, "");
             const pass = document.getElementById('login-pass').value;
-            const { data } = await _supabase.from('tesoureiros').select('nome').eq('cpf', cpf).eq('senha', pass).single();
+            const { data, error } = await _supabase.from('tesoureiros').select('nome').eq('cpf', cpf).eq('senha', pass).single();
 
             if (data) {
-                tesoureiroLogado = data.nome;
+                userLogado = data.nome;
                 document.getElementById('user-display').innerText = data.nome;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');
+
+                // LOG DE LOGIN (Com IP oculto)
+                await _supabase.from('logs').insert({
+                    nome_tesoureiro: userLogado,
+                    nome_aluno: 'SISTEMA',
+                    tipo_acao: 'LOGIN',
+                    detalhes: `Acesso realizado com sucesso`,
+                    ip_address: userIP
+                });
+
                 loadAlunos();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
@@ -160,18 +182,18 @@
         async function loadAlunos() {
             const { data: alunos } = await _supabase.from('alunos').select('*').order('id', { ascending: true });
             document.getElementById('aluno-table-body').innerHTML = alunos.map(a => `
-                <tr class="hover:bg-slate-50 border-l-4 ${a.pago ? 'border-l-emerald-500' : 'border-l-rose-500'}">
-                    <td class="p-6 text-slate-400 font-black">${a.id}</td>
-                    <td class="p-6 uppercase text-slate-700">${a.nome_guerra}</td>
-                    <td class="p-6 text-center font-black">${a.senhas_extras}</td>
+                <tr class="hover:bg-slate-50 transition border-l-4 ${a.pago ? 'border-l-emerald-500' : 'border-l-rose-500'}">
+                    <td class="p-6 text-slate-300 font-black">${a.id}</td>
+                    <td class="p-6 uppercase text-slate-800 font-bold">${a.nome_guerra}</td>
+                    <td class="p-6 text-center font-black text-lg">${a.senhas_extras}</td>
                     <td class="p-6 font-black text-blue-700">R$ ${a.senhas_extras * 400}</td>
                     <td class="p-6">
-                        <span class="px-2.5 py-1 rounded-md text-[10px] font-black ${a.pago ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                            ${a.pago ? 'PAGO' : 'PENDENTE'}
+                        <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${a.pago ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                            ${a.pago ? 'LIQUIDADO' : 'PENDENTE'}
                         </span>
                     </td>
                     <td class="p-6 text-right">
-                        <button onclick="openModal(${a.id}, '${a.nome_guerra}', ${a.senhas_extras}, ${a.pago})" class="bg-white border-2 border-slate-900 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase hover:bg-slate-900 hover:text-white transition">Editar</button>
+                        <button onclick="openModal(${a.id}, '${a.nome_guerra}', ${a.senhas_extras}, ${a.pago})" class="bg-white border-2 border-slate-900 px-5 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-slate-900 hover:text-white transition active:scale-95">Lançar</button>
                     </td>
                 </tr>
             `).join('');
@@ -194,11 +216,16 @@
             const novoStatus = document.getElementById('modal-status').value === "true";
 
             const { data: antigo } = await _supabase.from('alunos').select('*').eq('id', id).single();
+
             await _supabase.from('alunos').update({ senhas_extras: novasSenhas, pago: novoStatus }).eq('id', id);
+
+            // LOG DE ALTERAÇÃO (Com IP oculto)
             await _supabase.from('logs').insert({
-                nome_tesoureiro: tesoureiroLogado,
+                nome_tesoureiro: userLogado,
                 nome_aluno: nome,
-                detalhes: `Senhas: ${antigo.senhas_extras}→${novasSenhas} | Pago: ${antigo.pago}→${novoStatus}`
+                tipo_acao: 'ALTERAÇÃO',
+                detalhes: `Senhas: ${antigo.senhas_extras}→${novasSenhas} | Pago: ${antigo.pago}→${novoStatus}`,
+                ip_address: userIP
             });
 
             closeModal();
@@ -208,12 +235,16 @@
         async function loadLogs() {
             const { data: logs } = await _supabase.from('logs').select('*').order('data_hora', { ascending: false });
             document.getElementById('logs-list').innerHTML = logs.map(l => `
-                <div class="p-4 hover:bg-slate-50 transition">
-                    <div class="flex justify-between text-[9px] font-black text-slate-400 uppercase mb-1">
-                        <span>${new Date(l.data_hora).toLocaleString()}</span>
-                        <span class="text-blue-600 italic">Por: ${l.nome_tesoureiro}</span>
+                <div class="p-5 hover:bg-slate-50 transition border-l-4 ${l.tipo_acao === 'LOGIN' ? 'border-l-blue-400' : 'border-l-slate-200'}">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[9px] font-black text-slate-400 uppercase">${new Date(l.data_hora).toLocaleString('pt-BR')}</span>
+                        <span class="text-[9px] font-black text-blue-700 bg-blue-50 px-2 rounded uppercase">${l.tipo_acao}</span>
                     </div>
-                    <p class="text-xs font-bold text-slate-700 uppercase">Alterou <span class="text-black underline">${l.nome_aluno}</span>: <span class="bg-blue-50 text-blue-700 px-2 rounded">${l.detalhes}</span></p>
+                    <p class="text-xs font-bold text-slate-700 uppercase">
+                        Tesoureiro <span class="text-black underline">${l.nome_tesoureiro}</span> 
+                        ${l.tipo_acao === 'LOGIN' ? 'entrou no sistema' : `atualizou ${l.nome_aluno}`}
+                    </p>
+                    ${l.tipo_acao === 'ALTERAÇÃO' ? `<p class="text-[10px] text-slate-500 mt-1 font-mono">${l.detalhes}</p>` : ''}
                 </div>
             `).join('');
         }
