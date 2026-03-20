@@ -8,151 +8,137 @@
     <style>
         .tab-active { border-bottom: 3px solid #1e40af; color: #1e40af; font-weight: bold; }
         .hidden { display: none; }
+        .filter-btn-active { background-color: #1e40af !important; color: white !important; }
+        input:disabled, select:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800">
 
-    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-900">
-        <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
-            <h1 class="text-2xl font-bold mb-6 text-center text-slate-800">Acesso COMASP</h1>
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-900 px-4">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
+            <h1 class="text-2xl font-bold mb-6 text-center text-slate-800">Acesso COMASP T2</h1>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium">CPF (Apenas números)</label>
-                    <input type="text" id="login-cpf" class="w-full p-2 border rounded mt-1" placeholder="00000000000">
+                    <label class="block text-sm font-medium">CPF do Tesoureiro</label>
+                    <input type="text" id="login-cpf" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Apenas números">
                 </div>
                 <div>
                     <label class="block text-sm font-medium">Senha</label>
-                    <input type="password" id="login-pass" class="w-full p-2 border rounded mt-1" placeholder="******">
+                    <input type="password" id="login-pass" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="******">
                 </div>
                 <button onclick="handleLogin()" class="w-full bg-blue-700 text-white py-2 rounded font-bold hover:bg-blue-800 transition">Entrar</button>
             </div>
-            <p id="login-error" class="text-red-500 text-sm mt-4 text-center hidden">Credenciais inválidas.</p>
+            <p id="login-error" class="text-red-500 text-sm mt-4 text-center hidden font-semibold">Credenciais inválidas ou sem permissão.</p>
         </div>
     </div>
 
     <div id="main-app" class="hidden">
-        <header class="bg-white shadow-sm p-4 flex justify-between items-center border-b-2 border-blue-800">
-            <h2 class="text-xl font-bold text-slate-800">COMASP <span class="text-blue-600">T2 - Formatura</span></h2>
+        <header class="bg-white shadow-sm p-4 flex flex-col md:flex-row justify-between items-center border-b-2 border-blue-800 gap-4">
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-800 text-white p-2 rounded font-bold text-xs">COMASP</div>
+                <h2 class="text-xl font-bold text-slate-800">Formatura <span class="text-blue-600">T2</span></h2>
+            </div>
             <div class="flex items-center gap-4">
-                <span id="user-display" class="text-sm font-medium italic"></span>
-                <button onclick="handleLogout()" class="text-sm text-red-600 font-bold underline">Sair</button>
+                <div class="text-right">
+                    <span id="user-display" class="block text-sm font-bold text-slate-700"></span>
+                    <span id="user-role" class="block text-[10px] text-blue-600 uppercase font-bold"></span>
+                </div>
+                <button onclick="handleLogout()" class="text-sm text-red-600 font-bold hover:underline border-l pl-4">Sair</button>
             </div>
         </header>
 
-        <nav class="flex bg-white shadow-sm px-4">
-            <button onclick="showTab('painel')" id="btn-tab-painel" class="p-4 tab-active">Painel de Senhas</button>
-            <button onclick="showTab('logs')" id="btn-tab-logs" class="p-4">Logs de Auditoria</button>
+        <nav class="flex bg-white shadow-sm px-4 sticky top-0 z-10 border-b">
+            <button onclick="showTab('painel')" id="btn-tab-painel" class="p-4 tab-active transition">Painel de Alunos</button>
+            <button onclick="showTab('logs')" id="btn-tab-logs" class="p-4 transition">Logs de Auditoria</button>
         </nav>
 
-        <main class="p-6">
+        <main class="p-4 md:p-6">
             <div id="tab-painel">
-                <div class="mb-6 flex flex-wrap gap-2 items-center">
-                    <span class="text-sm font-bold uppercase text-gray-500 mr-2">Filtrar Pelotão:</span>
-                    <button onclick="filterPelotao('TODOS')" class="filter-btn bg-slate-800 text-white px-4 py-1 rounded-full text-sm">Todos</button>
-                    <button onclick="filterPelotao('1º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">1º Pel</button>
-                    <button onclick="filterPelotao('2º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">2º Pel</button>
-                    <button onclick="filterPelotao('3º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">3º Pel</button>
-                    <button onclick="filterPelotao('4º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">4º Pel</button>
-                    <button onclick="filterPelotao('5º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">5º Pel</button>
-                    <button onclick="filterPelotao('6º PEL')" class="filter-btn bg-white border px-4 py-1 rounded-full text-sm hover:bg-gray-100">6º Pel</button>
+                <div class="mb-6">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-xs font-bold uppercase text-gray-500">Filtrar Visualização:</span>
+                        <span class="text-xs text-gray-400 italic">* Você só pode alterar alunos do seu pelotão.</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="filterPelotao('TODOS')" class="filter-btn filter-btn-active bg-white border px-4 py-1.5 rounded-md text-sm shadow-sm">Todos</button>
+                        <button onclick="filterPelotao('1º PEL/2ª CIA')" class="filter-btn bg-white border px-4 py-1.5 rounded-md text-sm shadow-sm">1º Pel</button>
+                        <button onclick="filterPelotao('2º PEL/2ª CIA')" class="filter-btn bg-white border px-4 py-1.5 rounded-md text-sm shadow-sm">2º Pel</button>
+                        <button onclick="filterPelotao('3º PEL/2ª CIA')" class="filter-btn bg-white border px-4 py-1.5 rounded-md text-sm shadow-sm">3º Pel</button>
+                        <button onclick="filterPelotao('4º PEL/2ª CIA')" class="filter-btn bg-white border px-4 py-1.5 rounded-md text-sm shadow-sm">4º Pel</button>
+                        <button onclick="filterPelotao('5º PEL/2ª CIA')" class="filter-btn bg-white border px-4 py-1.5 rounded-md text-sm shadow-sm">5º Pel</button>
+                        <button onclick="filterPelotao('6º PEL/2ª CIA')" class="filter-btn bg-white border px-4 py-1.5 rounded-md text-sm shadow-sm">6º Pel</button>
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow overflow-hidden overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                <div class="bg-white rounded-lg shadow overflow-x-auto border border-gray-200">
+                    <table class="w-full text-left border-collapse min-w-[900px]">
                         <thead class="bg-slate-50 border-b">
                             <tr>
-                                <th class="p-4 text-sm font-bold uppercase">Nº / Nome</th>
-                                <th class="p-4 text-sm font-bold uppercase text-center">1º Lote (Até 2)</th>
-                                <th class="p-4 text-sm font-bold uppercase text-center">2º Lote (Até 1)</th>
-                                <th class="p-4 text-sm font-bold uppercase">Total</th>
-                                <th class="p-4 text-sm font-bold uppercase text-center">Ação</th>
+                                <th class="p-4 text-[11px] font-bold uppercase text-gray-600">Nº / Nome de Guerra</th>
+                                <th class="p-4 text-[11px] font-bold uppercase text-gray-600 text-center">1º Lote (Max 2)</th>
+                                <th class="p-4 text-[11px] font-bold uppercase text-gray-600 text-center">2º Lote (Max 1)</th>
+                                <th class="p-4 text-[11px] font-bold uppercase text-gray-600">Total Devido</th>
+                                <th class="p-4 text-[11px] font-bold uppercase text-gray-600 text-center">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="lista-alunos-body">
-                            </tbody>
+                        <tbody id="lista-alunos-body"></tbody>
                     </table>
                 </div>
             </div>
 
             <div id="tab-logs" class="hidden">
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h3 class="text-lg font-bold mb-4">Histórico de Alterações</h3>
-                    <div class="space-y-2" id="logs-container">
-                        </div>
+                <div class="bg-white rounded-lg shadow p-4 max-w-5xl mx-auto border border-gray-200">
+                    <h3 class="text-lg font-bold mb-4 border-b pb-2">Linha do Tempo de Auditoria</h3>
+                    <div class="space-y-1 max-h-[600px] overflow-y-auto pr-2" id="logs-container"></div>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-        // --- DADOS DO SISTEMA ---
+        // --- CONFIGURAÇÃO DE ACESSOS ATUALIZADA ---
         const CREDENCIAIS = {
-            "06085534418": { nome: "Marinho", senha: "Marinho@C94" },
-            "06392003460": { nome: "Cintia Souza", senha: "Cintia@C83" },
-            "11359413430": { nome: "Victor Ferreira", senha: "Victor@C61" },
-            "12583069489": { nome: "Lemos", senha: "Lemos@C57" },
-            "12639566458": { nome: "Kayo Gabriel", senha: "Kayo@C46" },
-            "70252829441": { nome: "Cibele", senha: "Cibele@C12" },
-            "70553935402": { nome: "Durval", senha: "Durval@C29" }
+            "06085534418": { nome: "Marinho", senha: "Marinho@C94", acesso: "TODOS", cargo: "Tesoureiro Adjunto" },
+            "70553935402": { nome: "Durval", senha: "Durval@C29", acesso: "TODOS", cargo: "Tesoureiro 1º PEL" },
+            "70252829441": { nome: "Cibele", senha: "Cibele@C12", acesso: "6º PEL/2ª CIA", cargo: "Tesoureira 6º PEL" },
+            "12583069489": { nome: "Lemos", senha: "Lemos@C57", acesso: "1º PEL/2ª CIA", cargo: "Tesoureiro 1º PEL" },
+            "06392003460": { nome: "Cintia Souza", senha: "Cintia@C83", acesso: "3º PEL/2ª CIA", cargo: "Tesoureira 3º PEL" },
+            "11359413430": { nome: "Victor Ferreira", senha: "Victor@C61", acesso: "2º PEL/2ª CIA", cargo: "Tesoureiro 2º PEL" },
+            "12639566458": { nome: "Kayo Gabriel", senha: "Kayo@C46", acesso: "5º PEL/2ª CIA", cargo: "Tesoureiro 5º PEL" }
         };
 
-        // Base de Alunos simplificada baseada no PDF
-        const ALUNOS_BASE = [
-            // 1º Pel [cite: 1]
-            { id: 1, nome: "MÁRCIO SOUZA", pel: "1º PEL" },
-            { id: 9, nome: "R. FERREIRA", pel: "1º PEL" },
-            { id: 28, nome: "LEMOS", pel: "1º PEL" },
-            { id: 118, nome: "DURVAL", pel: "1º PEL" },
-            // 2º Pel [cite: 2]
-            { id: 2, nome: "RENATO", pel: "2º PEL" },
-            { id: 10, nome: "VICTOR FERREIRA", pel: "2º PEL" },
-            { id: 11, nome: "ORLANDO", pel: "2º PEL" },
-            // 3º Pel [cite: 3]
-            { id: 3, nome: "FERNANDO", pel: "3º PEL" },
-            { id: 40, nome: "MARINHO", pel: "3º PEL" },
-            { id: 43, nome: "CINTIA SOUZA", pel: "3º PEL" },
-            // 4º Pel [cite: 4]
-            { id: 16, nome: "THIAGO TAVARES", pel: "4º PEL" },
-            { id: 197, nome: "ISRAEL OLIVEIRA", pel: "4º PEL" },
-            // 5º Pel [cite: 5]
-            { id: 5, nome: "SILVANA", pel: "5º PEL" },
-            { id: 32, nome: "KAYO GABRIEL", pel: "5º PEL" },
-            // 6º Pel [cite: 6]
-            { id: 6, nome: "DANIELLE PRADO", pel: "6º PEL" },
-            { id: 164, nome: "CIBELE", pel: "6º PEL" }
-            // Nota: Para brevidade usei os principais, mas o sistema aceita os 197.
+        // --- DADOS DOS 197 ALUNOS (OBJETO COMPLETO) ---
+        const ALUNOS_T2 = [
+            { id: 1, nome: "MÁRCIO SOUZA", pelotao: "1º PEL/2ª CIA" }, { id: 2, nome: "RENATO", pelotao: "2º PEL/2ª CIA" }, { id: 3, nome: "FERNANDO", pelotao: "3º PEL/2ª CIA" }, { id: 4, nome: "ROBERTO FREITAS", pelotao: "4º PEL/2ª CIA" }, { id: 5, nome: "SILVANA", pelotao: "5º PEL/2ª CIA" }, { id: 6, nome: "DANIELLE PRADO", pelotao: "6º PEL/2ª CIA" }, { id: 7, nome: "ARCOVERDE", pelotao: "1º PEL/2ª CIA" }, { id: 8, nome: "AUREA", pelotao: "1º PEL/2ª CIA" }, { id: 9, nome: "R. FERREIRA", pelotao: "1º PEL/2ª CIA" }, { id: 10, nome: "VICTOR FERREIRA", pelotao: "2º PEL/2ª CIA" }, { id: 11, nome: "ORLANDO", pelotao: "2º PEL/2ª CIA" }, { id: 12, nome: "ISABELLA", pelotao: "2º PEL/2ª CIA" }, { id: 13, nome: "BRENDA", pelotao: "3º PEL/2ª CIA" }, { id: 14, nome: "AMANDA COELHO", pelotao: "4º PEL/2ª CIA" }, { id: 15, nome: "JUNIOR", pelotao: "3º PEL/2ª CIA" }, { id: 16, nome: "THIAGO TAVARES", pelotao: "4º PEL/2ª CIA" }, { id: 17, nome: "MURILO", pelotao: "5º PEL/2ª CIA" }, { id: 18, nome: "ARYANA", pelotao: "5º PEL/2ª CIA" }, { id: 19, nome: "ALENCAR", pelotao: "3º PEL/2ª CIA" }, { id: 20, nome: "LUAN PEREIRA", pelotao: "4º PEL/2ª CIA" }, { id: 21, nome: "MANOEL", pelotao: "5º PEL/2ª CIA" }, { id: 24, nome: "MATHEUS MESQUITA", pelotao: "2º PEL/2ª CIA" }, { id: 25, nome: "DAVI OLIVEIRA", pelotao: "3º PEL/2ª CIA" }, { id: 26, nome: "MARCOLINO", pelotao: "4º PEL/2ª CIA" }, { id: 27, nome: "FATIMA AGUIAR", pelotao: "6º PEL/2ª CIA" }, { id: 28, nome: "LEMOS", pelotao: "1º PEL/2ª CIA" }, { id: 29, nome: "MACIEL", pelotao: "6º PEL/2ª CIA" }, { id: 30, nome: "M ALBUQUERQUE", pelotao: "2º PEL/2ª CIA" }, { id: 31, nome: "ALLATAS SOUSA", pelotao: "3º PEL/2ª CIA" }, { id: 32, nome: "KAYO GABRIEL", pelotao: "5º PEL/2ª CIA" }, { id: 33, nome: "KAROLINE ABREU", pelotao: "1º PEL/2ª CIA" }, { id: 34, nome: "GIOVANNI", pelotao: "1º PEL/2ª CIA" }, { id: 35, nome: "PAULINO", pelotao: "6º PEL/2ª CIA" }, { id: 36, nome: "M. FEITOSA", pelotao: "1º PEL/2ª CIA" }, { id: 37, nome: "VALDECI", pelotao: "2º PEL/2ª CIA" }, { id: 38, nome: "W. SILVA", pelotao: "4º PEL/2ª CIA" }, { id: 39, nome: "ELLIO", pelotao: "2º PEL/2ª CIA" }, { id: 40, nome: "MARINHO", pelotao: "3º PEL/2ª CIA" }, { id: 41, nome: "MALAQUIAS", pelotao: "4º PEL/2ª CIA" }, { id: 42, nome: "CARLA ARAUJO", pelotao: "2º PEL/2ª CIA" }, { id: 43, nome: "CINTIA SOUZA", pelotao: "3º PEL/2ª CIA" }, { id: 44, nome: "PRISCILA CORREIA", pelotao: "4º PEL/2ª CIA" }, { id: 45, nome: "WALYSON", pelotao: "5º PEL/2ª CIA" }, { id: 46, nome: "GRANGEIRO", pelotao: "3º PEL/2ª CIA" }, { id: 47, nome: "MACEDO", pelotao: "4º PEL/2ª CIA" }, { id: 48, nome: "ELVIS", pelotao: "5º PEL/2ª CIA" }, { id: 49, nome: "JEFERSON SILVA", pelotao: "6º PEL/2ª CIA" }, { id: 50, nome: "QUEIROZ", pelotao: "6º PEL/2ª CIA" }, { id: 52, nome: "RUBSLEY", pelotao: "2º PEL/2ª CIA" }, { id: 53, nome: "G. SILVA", pelotao: "1º PEL/2ª CIA" }, { id: 54, nome: "FRANÇA", pelotao: "1º PEL/2ª CIA" }, { id: 57, nome: "SANTANA", pelotao: "2º PEL/2ª CIA" }, { id: 58, nome: "WESLEY", pelotao: "5º PEL/2ª CIA" }, { id: 59, nome: "RAYANNE", pelotao: "6º PEL/2ª CIA" }, { id: 60, nome: "S.GOMES", pelotao: "6º PEL/2ª CIA" }, { id: 61, nome: "FIRMINO", pelotao: "4º PEL/2ª CIA" }, { id: 62, nome: "LUCAS MAGALHÃES", pelotao: "5º PEL/2ª CIA" }, { id: 63, nome: "PAULO", pelotao: "1º PEL/2ª CIA" }, { id: 64, nome: "BONFIM", pelotao: "6º PEL/2ª CIA" }, { id: 66, nome: "JÔNATAS SANTOS", pelotao: "2º PEL/2ª CIA" }, { id: 67, nome: "LAYANNE", pelotao: "1º PEL/2ª CIA" }, { id: 68, nome: "KAROLINNE MOREIRA", pelotao: "2º PEL/2ª CIA" }, { id: 69, nome: "FALCÃO", pelotao: "3º PEL/2ª CIA" }, { id: 70, nome: "MEIRA", pelotao: "3º PEL/2ª CIA" }, { id: 71, nome: "SERAFIM", pelotao: "4º PEL/2ª CIA" }, { id: 72, nome: "NONATO", pelotao: "5º PEL/2ª CIA" }, { id: 73, nome: "PEREIRA", pelotao: "2º PEL/2ª CIA" }, { id: 74, nome: "GABRIEL", pelotao: "6º PEL/2ª CIA" }, { id: 75, nome: "PEDRO", pelotao: "3º PEL/2ª CIA" }, { id: 76, nome: "FERREIRA", pelotao: "4º PEL/2ª CIA" }, { id: 77, nome: "EDUARDA", pelotao: "3º PEL/2ª CIA" }, { id: 78, nome: "GISELE FERREIRA", pelotao: "4º PEL/2ª CIA" }, { id: 79, nome: "DIÓGENES", pelotao: "4º PEL/2ª CIA" }, { id: 80, nome: "JOSÉ", pelotao: "5º PEL/2ª CIA" }, { id: 81, nome: "COSTA", pelotao: "6º PEL/2ª CIA" }, { id: 82, nome: "MARCOS NASCIMENTO", pelotao: "1º PEL/2ª CIA" }, { id: 83, nome: "P. SOUZA", pelotao: "2º PEL/2ª CIA" }, { id: 84, nome: "SIDNEI ARAÚJO", pelotao: "3º PEL/2ª CIA" }, { id: 85, nome: "ANDERSON", pelotao: "4º PEL/2ª CIA" }, { id: 86, nome: "FERNANDO CRUZ", pelotao: "5º PEL/2ª CIA" }, { id: 87, nome: "ARYCLAYTON", pelotao: "6º PEL/2ª CIA" }, { id: 88, nome: "S. NETO", pelotao: "1º PEL/2ª CIA" }, { id: 89, nome: "SILVA", pelotao: "2º PEL/2ª CIA" }, { id: 90, nome: "RAFAEL BEZERRA", pelotao: "3º PEL/2ª CIA" }, { id: 91, nome: "GESSICA", pelotao: "5º PEL/2ª CIA" }, { id: 92, nome: "ALINE", pelotao: "6º PEL/2ª CIA" }, { id: 93, nome: "REVERTHON", pelotao: "1º PEL/2ª CIA" }, { id: 94, nome: "FERNANDA SOARES", pelotao: "1º PEL/2ª CIA" }, { id: 95, nome: "BRUNO", pelotao: "5º PEL/2ª CIA" }, { id: 96, nome: "ERIVELTON", pelotao: "2º PEL/2ª CIA" }, { id: 97, nome: "ÍTALO", pelotao: "3º PEL/2ª CIA" }, { id: 98, nome: "EMANNUEL", pelotao: "4º PEL/2ª CIA" }, { id: 99, nome: "G. GOMES", pelotao: "4º PEL/2ª CIA" }, { id: 100, nome: "RENAN", pelotao: "6º PEL/2ª CIA" }, { id: 102, nome: "ALLAN MARIANO", pelotao: "5º PEL/2ª CIA" }, { id: 103, nome: "RAÍSSA SOARES", pelotao: "2º PEL/2ª CIA" }, { id: 105, nome: "JOSÉ NETO", pelotao: "5º PEL/2ª CIA" }, { id: 106, nome: "LUCAS RANIELLE", pelotao: "2º PEL/2ª CIA" }, { id: 107, nome: "LUCIANO", pelotao: "6º PEL/2ª CIA" }, { id: 108, nome: "HENRIQUE", pelotao: "1º PEL/2ª CIA" }, { id: 109, nome: "ERIKA DUARTE", pelotao: "4º PEL/2ª CIA" }, { id: 110, nome: "CÉSAR MEDEIROS", pelotao: "1º PEL/2ª CIA" }, { id: 111, nome: "FELIPE MORAIS", pelotao: "2º PEL/2ª CIA" }, { id: 112, nome: "MARQUES", pelotao: "3º PEL/2ª CIA" }, { id: 113, nome: "AURÉLIO", pelotao: "4º PEL/2ª CIA" }, { id: 114, nome: "BARBALHO", pelotao: "5º PEL/2ª CIA" }, { id: 115, nome: "VINICIUS OLIVEIRA", pelotao: "2º PEL/2ª CIA" }, { id: 116, nome: "SANTIAGO", pelotao: "6º PEL/2ª CIA" }, { id: 118, nome: "DURVAL", pelotao: "1º PEL/2ª CIA" }, { id: 119, nome: "VINÍCIUS SOUZA", pelotao: "2º PEL/2ª CIA" }, { id: 120, nome: "EGITO", pelotao: "3º PEL/2ª CIA" }, { id: 121, nome: "JOÃO NASCIMENTO", pelotao: "2º PEL/2ª CIA" }, { id: 122, nome: "BATISTA", pelotao: "4º PEL/2ª CIA" }, { id: 123, nome: "GONZAGA", pelotao: "5º PEL/2ª CIA" }, { id: 125, nome: "MEDEIROS", pelotao: "3º PEL/2ª CIA" }, { id: 126, nome: "GILMARA", pelotao: "5º PEL/2ª CIA" }, { id: 127, nome: "CAIO GUIMARÃES", pelotao: "6º PEL/2ª CIA" }, { id: 128, nome: "ALEXANDRO GOMES", pelotao: "4º PEL/2ª CIA" }, { id: 129, nome: "LUIZ NUNES", pelotao: "5º PEL/2ª CIA" }, { id: 130, nome: "PAULO ROBERTO", pelotao: "6º PEL/2ª CIA" }, { id: 131, nome: "RENATA", pelotao: "6º PEL/2ª CIA" }, { id: 132, nome: "SÉRGIO", pelotao: "1º PEL/2ª CIA" }, { id: 133, nome: "ISRAEL", pelotao: "2º PEL/2ª CIA" }, { id: 134, nome: "SAMEA FERRAZ", pelotao: "2º PEL/2ª CIA" }, { id: 135, nome: "JOÃO HENRIQUE", pelotao: "3º PEL/2ª CIA" }, { id: 136, nome: "PATRICIA", pelotao: "1º PEL/2ª CIA" }, { id: 137, nome: "RAFAEL PEREIRA", pelotao: "6º PEL/2ª CIA" }, { id: 138, nome: "ICARO", pelotao: "5º PEL/2ª CIA" }, { id: 139, nome: "JULIANA GONDIM", pelotao: "3º PEL/2ª CIA" }, { id: 140, nome: "VICTOR COSTA", pelotao: "1º PEL/2ª CIA" }, { id: 141, nome: "JULIANE CORDEIRO", pelotao: "4º PEL/2ª CIA" }, { id: 142, nome: "JABNER", pelotao: "2º PEL/2ª CIA" }, { id: 143, nome: "SAMARA MELO", pelotao: "5º PEL/2ª CIA" }, { id: 144, nome: "EDJANE", pelotao: "6º PEL/2ª CIA" }, { id: 145, nome: "HIGOR ALVES", pelotao: "5º PEL/2ª CIA" }, { id: 146, nome: "PEREIRA MORAIS", pelotao: "6º PEL/2ª CIA" }, { id: 147, nome: "JORGE FILHO", pelotao: "1º PEL/2ª CIA" }, { id: 148, nome: "OLAVO", pelotao: "3º PEL/2ª CIA" }, { id: 149, nome: "CAVALCANTI", pelotao: "6º PEL/2ª CIA" }, { id: 150, nome: "ROBERTA", pelotao: "1º PEL/2ª CIA" }, { id: 151, nome: "OLIVEIRA JÚNIOR", pelotao: "5º PEL/2ª CIA" }, { id: 152, nome: "MOURA", pelotao: "2º PEL/2ª CIA" }, { id: 153, nome: "AFONSO", pelotao: "3º PEL/2ª CIA" }, { id: 154, nome: "DAYANE", pelotao: "2º PEL/2ª CIA" }, { id: 156, nome: "MONALIZA", pelotao: "3º PEL/2ª CIA" }, { id: 157, nome: "VALADARES", pelotao: "3º PEL/2ª CIA" }, { id: 158, nome: "HEYVERSON", pelotao: "5º PEL/2ª CIA" }, { id: 161, nome: "JOSE ALISSON", pelotao: "6º PEL/2ª CIA" }, { id: 162, nome: "JESUS", pelotao: "1º PEL/2ª CIA" }, { id: 163, nome: "NATÁLIA", pelotao: "5º PEL/2ª CIA" }, { id: 164, nome: "CIBELE", pelotao: "6º PEL/2ª CIA" }, { id: 165, nome: "GUSTAVO", pelotao: "2º PEL/2ª CIA" }, { id: 166, nome: "FELIPE FÉLIX", pelotao: "3º PEL/2ª CIA" }, { id: 168, nome: "LEONAM", pelotao: "5º PEL/2ª CIA" }, { id: 169, nome: "MATHEUS BARROS", pelotao: "6º PEL/2ª CIA" }, { id: 170, nome: "ANTONIO REIS", pelotao: "4º PEL/2ª CIA" }, { id: 171, nome: "JHONEY", pelotao: "5º PEL/2ª CIA" }, { id: 172, nome: "FRANCISCO", pelotao: "1º PEL/2ª CIA" }, { id: 173, nome: "IURY", pelotao: "3º PEL/2ª CIA" }, { id: 174, nome: "LIMA PAIVA", pelotao: "6º PEL/2ª CIA" }, { id: 175, nome: "LUIZ LEAL", pelotao: "2º PEL/2ª CIA" }, { id: 176, nome: "RHAYSA", pelotao: "1º PEL/2ª CIA" }, { id: 177, nome: "DIONIZIO", pelotao: "4º PEL/2ª CIA" }, { id: 178, nome: "HIAGO", pelotao: "4º PEL/2ª CIA" }, { id: 179, nome: "DÉBORA GOUVEIA", pelotao: "2º PEL/2ª CIA" }, { id: 180, nome: "NOBREGA", pelotao: "5º PEL/2ª CIA" }, { id: 181, nome: "THAYNARA", pelotao: "3º PEL/2ª CIA" }, { id: 182, nome: "JOSINALDO", pelotao: "4º PEL/2ª CIA" }, { id: 183, nome: "JULIO", pelotao: "5º PEL/2ª CIA" }, { id: 184, nome: "ABRAAO", pelotao: "6º PEL/2ª CIA" }, { id: 185, nome: "RONILSON", pelotao: "1º PEL/2ª CIA" }, { id: 186, nome: "SOUTO", pelotao: "3º PEL/2ª CIA" }, { id: 187, nome: "BELEM", pelotao: "4º PEL/2ª CIA" }, { id: 188, nome: "MAXEMBERG", pelotao: "3º PEL/2ª CIA" }, { id: 189, nome: "KAMYLA", pelotao: "4º PEL/2ª CIA" }, { id: 190, nome: "JÚLIA", pelotao: "5º PEL/2ª CIA" }, { id: 191, nome: "SELTON", pelotao: "4º PEL/2ª CIA" }, { id: 192, nome: "JEFFERSON GOMES", pelotao: "1º PEL/2ª CIA" }, { id: 193, nome: "JAILTON", pelotao: "6º PEL/2ª CIA" }, { id: 194, nome: "KLEVER", pelotao: "5º PEL/2ª CIA" }, { id: 195, nome: "PETTERSON", pelotao: "2º PEL/2ª CIA" }, { id: 196, nome: "CARDOSO", pelotao: "6º PEL/2ª CIA" }, { id: 197, nome: "ISRAEL OLIVEIRA", pelotao: "4º PEL/2ª CIA" }
         ];
 
-        // --- ESTADO DA APLICAÇÃO ---
+        // --- ESTADO INICIAL ---
         let usuarioLogado = null;
-        let dadosAlunos = JSON.parse(localStorage.getItem('comasp_alunos')) || ALUNOS_BASE.map(a => ({
+        let dadosAlunos = JSON.parse(localStorage.getItem('comasp_v3_alunos')) || ALUNOS_T2.map(a => ({
             ...a, l1_qtd: 0, l1_pago: false, l2_qtd: 0, l2_pago: false
         }));
-        let logs = JSON.parse(localStorage.getItem('comasp_logs')) || [];
+        let logs = JSON.parse(localStorage.getItem('comasp_v3_logs')) || [];
 
-        // --- LÓGICA DE ACESSO ---
+        // --- ACESSO ---
         function handleLogin() {
-            const cpf = document.getElementById('login-cpf').value;
-            const pass = document.getElementById('login-pass').value;
+            const cpfInput = document.getElementById('login-cpf').value.replace(/\D/g, "");
+            const passInput = document.getElementById('login-pass').value;
             const error = document.getElementById('login-error');
 
-            if (CREDENCIAIS[cpf] && CREDENCIAIS[cpf].senha === pass) {
-                usuarioLogado = { cpf, nome: CREDENCIAIS[cpf].nome };
+            if (CREDENCIAIS[cpfInput] && CREDENCIAIS[cpfInput].senha === passInput) {
+                usuarioLogado = { ...CREDENCIAIS[cpfInput], cpf: cpfInput };
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('user-display').innerText = `Operador: ${usuarioLogado.nome} (${usuarioLogado.cpf})`;
+                document.getElementById('user-display').innerText = usuarioLogado.nome;
+                document.getElementById('user-role').innerText = usuarioLogado.cargo;
                 renderAlunos();
                 renderLogs();
-            } else {
-                error.classList.remove('hidden');
-            }
+            } else { error.classList.remove('hidden'); }
         }
 
-        function handleLogout() {
-            location.reload();
-        }
+        function handleLogout() { location.reload(); }
 
-        // --- LÓGICA DE INTERFACE ---
+        // --- INTERFACE ---
         function showTab(tab) {
             document.getElementById('tab-painel').classList.toggle('hidden', tab !== 'painel');
             document.getElementById('tab-logs').classList.toggle('hidden', tab !== 'logs');
@@ -162,12 +148,8 @@
 
         function filterPelotao(pel) {
             const btns = document.querySelectorAll('.filter-btn');
-            btns.forEach(b => {
-                b.classList.remove('bg-slate-800', 'text-white');
-                b.classList.add('bg-white', 'border');
-            });
-            event.target.classList.remove('bg-white', 'border');
-            event.target.classList.add('bg-slate-800', 'text-white');
+            btns.forEach(b => b.classList.remove('filter-btn-active'));
+            event.target.classList.add('filter-btn-active');
             renderAlunos(pel);
         }
 
@@ -175,91 +157,95 @@
         function renderAlunos(filtro = 'TODOS') {
             const body = document.getElementById('lista-alunos-body');
             body.innerHTML = '';
-
-            const filtrados = filtro === 'TODOS' ? dadosAlunos : dadosAlunos.filter(a => a.pel === filtro);
+            const filtrados = filtro === 'TODOS' ? dadosAlunos : dadosAlunos.filter(a => a.pelotao === filtro);
 
             filtrados.forEach(aluno => {
+                const podeEditar = (usuarioLogado.acesso === "TODOS" || usuarioLogado.acesso === aluno.pelotao);
                 const total = (aluno.l1_qtd + aluno.l2_qtd) * 400;
+                
                 const row = document.createElement('tr');
-                row.className = "border-b hover:bg-gray-50";
+                row.className = `border-b transition-colors ${!podeEditar ? 'bg-gray-50 opacity-80' : 'hover:bg-blue-50'}`;
                 row.innerHTML = `
                     <td class="p-4">
-                        <div class="font-bold text-slate-900">${aluno.id} - ${aluno.nome}</div>
-                        <div class="text-xs text-gray-500">${aluno.pel}</div>
-                    </td>
-                    <td class="p-4 text-center">
-                        <div class="flex flex-col gap-1 items-center">
-                            <select onchange="updateData(${aluno.id}, 'l1_qtd', this.value)" class="text-sm border rounded">
-                                <option value="0" ${aluno.l1_qtd == 0 ? 'selected' : ''}>0 senhas</option>
-                                <option value="1" ${aluno.l1_qtd == 1 ? 'selected' : ''}>1 senha</option>
-                                <option value="2" ${aluno.l1_qtd == 2 ? 'selected' : ''}>2 senhas</option>
-                            </select>
-                            <button onclick="updateData(${aluno.id}, 'l1_pago', ${!aluno.l1_pago})" 
-                                class="text-[10px] px-2 py-0.5 rounded uppercase font-bold ${aluno.l1_pago ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                ${aluno.l1_pago ? 'PAGO' : 'PENDENTE'}
-                            </button>
+                        <div class="flex items-center gap-2">
+                            ${!podeEditar ? '🔒' : ''}
+                            <div>
+                                <div class="font-bold text-slate-800 text-sm">${aluno.id} - ${aluno.nome}</div>
+                                <div class="text-[10px] text-gray-400 font-mono">${aluno.pelotao}</div>
+                            </div>
                         </div>
                     </td>
                     <td class="p-4 text-center">
-                        <div class="flex flex-col gap-1 items-center">
-                            <select onchange="updateData(${aluno.id}, 'l2_qtd', this.value)" class="text-sm border rounded">
-                                <option value="0" ${aluno.l2_qtd == 0 ? 'selected' : ''}>0 senhas</option>
-                                <option value="1" ${aluno.l2_qtd == 1 ? 'selected' : ''}>1 senha</option>
-                            </select>
-                            <button onclick="updateData(${aluno.id}, 'l2_pago', ${!aluno.l2_pago})" 
-                                class="text-[10px] px-2 py-0.5 rounded uppercase font-bold ${aluno.l2_pago ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                ${aluno.l2_pago ? 'PAGO' : 'PENDENTE'}
-                            </button>
-                        </div>
+                        <select ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, 'l1_qtd', this.value)" class="text-xs border rounded p-1">
+                            <option value="0" ${aluno.l1_qtd == 0 ? 'selected' : ''}>0</option>
+                            <option value="1" ${aluno.l1_qtd == 1 ? 'selected' : ''}>1</option>
+                            <option value="2" ${aluno.l1_qtd == 2 ? 'selected' : ''}>2</option>
+                        </select>
+                        <button ${!podeEditar ? 'disabled' : ''} onclick="updateData(${aluno.id}, 'l1_pago', ${!aluno.l1_pago})" 
+                            class="block mx-auto mt-1 text-[9px] px-2 py-0.5 rounded-full font-bold border ${aluno.l1_pago ? 'bg-green-600 text-white' : 'bg-white text-orange-500 border-orange-500'}">
+                            ${aluno.l1_pago ? 'PAGO' : 'PENDENTE'}
+                        </button>
                     </td>
-                    <td class="p-4 font-bold text-blue-800">R$ ${total}</td>
                     <td class="p-4 text-center">
-                        <button class="text-xs text-gray-400 italic">Auto-save</button>
+                        <select ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, 'l2_qtd', this.value)" class="text-xs border rounded p-1">
+                            <option value="0" ${aluno.l2_qtd == 0 ? 'selected' : ''}>0</option>
+                            <option value="1" ${aluno.l2_qtd == 1 ? 'selected' : ''}>1</option>
+                        </select>
+                        <button ${!podeEditar ? 'disabled' : ''} onclick="updateData(${aluno.id}, 'l2_pago', ${!aluno.l2_pago})" 
+                            class="block mx-auto mt-1 text-[9px] px-2 py-0.5 rounded-full font-bold border ${aluno.l2_pago ? 'bg-green-600 text-white' : 'bg-white text-orange-500 border-orange-500'}">
+                            ${aluno.l2_pago ? 'PAGO' : 'PENDENTE'}
+                        </button>
+                    </td>
+                    <td class="p-4 font-bold text-slate-700">R$ ${total}</td>
+                    <td class="p-4 text-center">
+                        <span class="text-[10px] px-2 py-1 rounded ${aluno.l1_pago && (aluno.l2_qtd == 0 || aluno.l2_pago) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'} font-bold">
+                            ${aluno.l1_pago && (aluno.l2_qtd == 0 || aluno.l2_pago) ? 'FINALIZADO' : 'EM ABERTO'}
+                        </span>
                     </td>
                 `;
                 body.appendChild(row);
             });
         }
 
-        function renderLogs() {
-            const container = document.getElementById('logs-container');
-            container.innerHTML = logs.length === 0 ? '<p class="text-gray-400">Nenhuma atividade registrada.</p>' : '';
-            
-            logs.slice().reverse().forEach(log => {
-                const item = document.createElement('div');
-                item.className = "text-xs p-2 border-l-4 border-blue-500 bg-slate-50 rounded";
-                item.innerHTML = `<strong>[${log.data}]</strong> Usuário <b>${log.usuario}</b> alterou <b>${log.aluno}</b>: ${log.detalhe}`;
-                container.appendChild(item);
-            });
-        }
-
-        // --- PERSISTÊNCIA E AUDITORIA ---
+        // --- ATUALIZAÇÃO ---
         function updateData(alunoId, campo, valor) {
             const index = dadosAlunos.findIndex(a => a.id === alunoId);
-            const antigo = dadosAlunos[index][campo];
-            
-            // Converte tipos para salvar corretamente
+            const aluno = dadosAlunos[index];
+
+            // Proteção extra contra manipulação via console
+            if (usuarioLogado.acesso !== "TODOS" && usuarioLogado.acesso !== aluno.pelotao) {
+                alert("Permissão negada para este pelotão.");
+                return;
+            }
+
+            const antigo = aluno[campo];
             const novoValor = (campo.includes('qtd')) ? parseInt(valor) : valor;
-            
             if (antigo === novoValor) return;
 
             dadosAlunos[index][campo] = novoValor;
             
-            // Registrar Log
-            const logEntry = {
+            logs.push({
                 data: new Date().toLocaleString('pt-BR'),
-                usuario: usuarioLogado.nome,
-                aluno: dadosAlunos[index].nome,
-                detalhe: `Campo ${campo} mudou de '${antigo}' para '${novoValor}'`
-            };
-            logs.push(logEntry);
+                autor: usuarioLogado.nome,
+                aluno: aluno.nome,
+                detalhe: `${campo}: ${antigo} ➔ ${novoValor}`
+            });
 
-            // Salvar no LocalStorage
-            localStorage.setItem('comasp_alunos', JSON.stringify(dadosAlunos));
-            localStorage.setItem('comasp_logs', JSON.stringify(logs));
-
-            renderAlunos();
+            localStorage.setItem('comasp_v3_alunos', JSON.stringify(dadosAlunos));
+            localStorage.setItem('comasp_v3_logs', JSON.stringify(logs));
+            renderAlunos(document.querySelector('.filter-btn-active').innerText === 'Todos' ? 'TODOS' : document.querySelector('.filter-btn-active').innerText + '/2ª CIA');
             renderLogs();
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('logs-container');
+            container.innerHTML = logs.length === 0 ? '<p class="text-gray-400">Sem histórico.</p>' : '';
+            logs.slice().reverse().forEach(log => {
+                const item = document.createElement('div');
+                item.className = "text-[10px] p-2 border-l-2 border-blue-800 bg-white mb-1 shadow-sm flex gap-3";
+                item.innerHTML = `<span class="text-gray-400">${log.data}</span> <span class="font-bold text-blue-900 w-24">${log.autor}</span> <span>Modificou <b>${log.aluno}</b>: ${log.detalhe}</span>`;
+                container.appendChild(item);
+            });
         }
     </script>
 </body>
