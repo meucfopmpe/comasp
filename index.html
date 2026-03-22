@@ -3,42 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COMASP T2 - Sistema Integrado</title>
+    <title>COMASP T2 - Sistema Oficial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .tab-active { border-bottom: 3px solid #1e40af; color: #1e40af; font-weight: bold; }
         .hidden { display: none; }
         .filter-btn-active { background-color: #1e40af !important; color: white !important; }
-        input:disabled, select:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.6; }
         
-        /* CORREÇÃO DO RELATÓRIO DE IMPRESSÃO */
         @media print {
-            body { background-color: white !important; }
-            #main-app, #login-screen { display: none !important; } /* Esconde o sistema */
+            body { background: white !important; }
+            #main-app, #login-screen, nav, header { display: none !important; }
             #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 12px; }
-            th { background-color: #f4f4f4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .status-pago { color: green; font-weight: bold; }
-            .status-pendente { color: orange; font-style: italic; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 10px; }
+            th { background: #eee !important; -webkit-print-color-adjust: exact; }
         }
     </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800">
 
     <div id="print-area" class="hidden">
-        <h1 class="text-2xl font-bold mb-1 text-center">COMASP T2 - Relatório de Controle de Senhas</h1>
-        <p class="text-center text-sm mb-6 text-gray-500" id="print-date"></p>
-        <table id="print-table">
+        <h1 id="print-title" class="text-xl font-bold text-center">COMASP T2 - RELATÓRIO DE SENHAS</h1>
+        <p id="print-subtitle" class="text-center text-xs mb-4"></p>
+        <table>
             <thead>
                 <tr>
-                    <th>Nº / Nome de Guerra</th>
-                    <th>Pelotão</th>
-                    <th>Lote 1 (Até 2)</th>
-                    <th>Lote 2 (Até 1)</th>
-                    <th>Total Acumulado</th>
-                    <th>Situação Final</th>
+                    <th>Nº / ALUNO</th>
+                    <th>PELOTÃO</th>
+                    <th>L1 (QTD/PG)</th>
+                    <th>L2 (QTD/PG)</th>
+                    <th>TOTAL PAGO</th>
                 </tr>
             </thead>
             <tbody id="print-tbody"></tbody>
@@ -47,64 +42,53 @@
 
     <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-900 px-4">
         <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
-            <h1 class="text-2xl font-bold mb-6 text-center text-slate-800 tracking-tight">COMASP <span class="text-blue-600 font-black">T2</span></h1>
+            <h1 class="text-2xl font-bold mb-6 text-center text-slate-800">COMASP <span class="text-blue-600 font-black">T2</span></h1>
             <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500">CPF (Login)</label>
-                    <input type="text" id="login-cpf" class="w-full p-2 border rounded mt-1 outline-none" placeholder="Apenas números">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500">Senha Pessoal</label>
-                    <input type="password" id="login-pass" class="w-full p-2 border rounded mt-1 outline-none" placeholder="******">
-                </div>
-                <button onclick="handleLogin()" id="btn-entrar" class="w-full bg-blue-700 text-white py-2 rounded font-bold hover:bg-blue-800 transition">Entrar no Sistema</button>
+                <input type="text" id="login-cpf" class="w-full p-2 border rounded" placeholder="CPF (Apenas números)">
+                <input type="password" id="login-pass" class="w-full p-2 border rounded" placeholder="Senha">
+                <button onclick="handleLogin()" id="btn-entrar" class="w-full bg-blue-700 text-white py-2 rounded font-bold hover:bg-blue-800 transition">Entrar</button>
             </div>
-            <p id="login-error" class="text-red-500 text-xs mt-4 text-center hidden font-bold"></p>
+            <p id="login-error" class="text-red-500 text-xs mt-4 text-center hidden"></p>
         </div>
     </div>
 
     <div id="main-app" class="hidden">
         <header class="bg-white shadow p-4 flex flex-col md:flex-row justify-between items-center border-b-2 border-blue-800 gap-4">
-            <h2 class="text-xl font-bold text-slate-800 uppercase tracking-tighter">Gestão de Senhas <span class="text-blue-600">T2</span></h2>
+            <h2 class="text-xl font-bold uppercase">Gestão <span class="text-blue-600">T2</span></h2>
             <div class="flex items-center gap-4">
-                <button onclick="gerarRelatorio()" class="bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded font-bold text-xs hover:bg-blue-100 transition shadow-sm flex items-center gap-2">
-                    🖨️ Imprimir Relatório
-                </button>
-                <div class="border-l pl-4 text-right">
-                    <span id="user-display" class="block text-sm font-bold text-slate-700"></span>
-                    <span id="user-role" class="block text-[10px] text-blue-600 uppercase font-black"></span>
+                <div class="bg-slate-50 border rounded px-3 py-1 text-right">
+                    <div class="text-[10px] uppercase font-bold text-gray-400">Total Arrecadado (Geral)</div>
+                    <div id="total-geral" class="text-lg font-black text-blue-800">R$ 0,00</div>
                 </div>
-                <button onclick="handleLogout()" class="text-xs bg-red-50 text-red-600 px-3 py-1 rounded font-bold hover:bg-red-100 border-l ml-2">Sair</button>
+                <button onclick="gerarRelatorio()" class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-xs hover:bg-blue-700 shadow-sm flex items-center gap-2">
+                    🖨️ Imprimir Pelotão
+                </button>
+                <button onclick="handleLogout()" class="text-xs bg-red-50 text-red-600 px-3 py-1 rounded font-bold">Sair</button>
             </div>
         </header>
 
         <nav class="flex bg-white shadow-sm px-4 sticky top-0 z-10 border-b">
-            <button onclick="showTab('painel')" id="btn-tab-painel" class="p-4 tab-active transition">Painel de Alunos</button>
-            <button onclick="showTab('logs')" id="btn-tab-logs" class="p-4 transition">Linha do Tempo (Logs)</button>
+            <button onclick="showTab('painel')" id="btn-tab-painel" class="p-4 tab-active">Alunos</button>
+            <button onclick="showTab('logs')" id="btn-tab-logs" class="p-4">Auditoria (Logs)</button>
         </nav>
 
-        <main class="p-4 md:p-6">
+        <main class="p-4">
             <div id="tab-painel">
-                <div class="mb-6 flex flex-wrap gap-2" id="filter-container">
-                    <button onclick="filterPelotao('TODOS')" class="filter-btn filter-btn-active bg-white border px-3 py-1 rounded-md text-xs shadow-sm">Todos</button>
-                    <button onclick="filterPelotao('1º PEL/2ª CIA')" class="filter-btn bg-white border px-3 py-1 rounded-md text-xs shadow-sm">1º Pel</button>
-                    <button onclick="filterPelotao('2º PEL/2ª CIA')" class="filter-btn bg-white border px-3 py-1 rounded-md text-xs shadow-sm">2º Pel</button>
-                    <button onclick="filterPelotao('3º PEL/2ª CIA')" class="filter-btn bg-white border px-3 py-1 rounded-md text-xs shadow-sm">3º Pel</button>
-                    <button onclick="filterPelotao('4º PEL/2ª CIA')" class="filter-btn bg-white border px-3 py-1 rounded-md text-xs shadow-sm">4º Pel</button>
-                    <button onclick="filterPelotao('5º PEL/2ª CIA')" class="filter-btn bg-white border px-3 py-1 rounded-md text-xs shadow-sm">5º Pel</button>
-                    <button onclick="filterPelotao('6º PEL/2ª CIA')" class="filter-btn bg-white border px-3 py-1 rounded-md text-xs shadow-sm">6º Pel</button>
+                <div class="mb-4 bg-blue-50 border border-blue-200 p-3 rounded flex justify-between items-center">
+                    <div>
+                        <span class="text-xs font-bold text-blue-800 uppercase" id="label-total-pelotao">Exibindo: Todos</span>
+                    </div>
+                    <div class="text-blue-900 font-bold">
+                        Arrecadado no Filtro: <span id="valor-filtro" class="text-xl">R$ 0,00</span>
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow overflow-x-auto border border-gray-200">
+                <div class="mb-4 flex flex-wrap gap-2" id="filter-container"></div>
+                
+                <div class="bg-white rounded shadow overflow-x-auto border border-gray-200">
                     <table class="w-full text-left border-collapse min-w-[900px]">
-                        <thead class="bg-slate-50 border-b">
-                            <tr>
-                                <th class="p-4 text-[11px] font-bold uppercase text-gray-500">Nº / Nome</th>
-                                <th class="p-4 text-[11px] font-bold uppercase text-gray-500 text-center">Lote 1 (Max 2)</th>
-                                <th class="p-4 text-[11px] font-bold uppercase text-gray-500 text-center">Lote 2 (Max 1)</th>
-                                <th class="p-4 text-[11px] font-bold uppercase text-gray-500">Total Devido</th>
-                                <th class="p-4 text-[11px] font-bold uppercase text-gray-500 text-center">Status Geral</th>
-                            </tr>
+                        <thead class="bg-slate-100 border-b text-[11px] font-bold uppercase text-gray-500">
+                            <tr><th class="p-4">Nº / Nome</th><th class="p-4 text-center">Lote 1 (Max 2)</th><th class="p-4 text-center">Lote 2 (Max 1)</th><th class="p-4">Total</th><th class="p-4 text-center">Ação</th></tr>
                         </thead>
                         <tbody id="lista-alunos-body"></tbody>
                     </table>
@@ -112,9 +96,10 @@
             </div>
 
             <div id="tab-logs" class="hidden">
-                <div class="bg-white rounded-lg shadow p-4 max-w-5xl mx-auto border border-gray-200">
-                    <div class="space-y-1 max-h-[600px] overflow-y-auto pr-2" id="logs-container"></div>
+                <div id="sync-banner" class="mb-4 bg-orange-100 border border-orange-300 p-3 rounded text-sm hidden">
+                    ⚠️ Encontramos logs antigos neste computador. <button onclick="migrarLogsLocais()" class="font-bold underline">Clique aqui para salvar no banco de dados.</button>
                 </div>
+                <div class="bg-white rounded shadow p-4 max-w-5xl mx-auto space-y-1" id="logs-container"></div>
             </div>
         </main>
     </div>
@@ -125,43 +110,168 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let usuarioLogado = null;
-        let alunosDB = []; 
+        let alunosDB = [];
+        let filtroAtivo = 'TODOS';
 
         async function handleLogin() {
+            const cpf = document.getElementById('login-cpf').value.replace(/\D/g, "");
+            const pass = document.getElementById('login-pass').value;
             const btn = document.getElementById('btn-entrar');
-            const errorEl = document.getElementById('login-error');
-            const cpfInput = document.getElementById('login-cpf').value.replace(/\D/g, "");
-            const passInput = document.getElementById('login-pass').value;
+            btn.disabled = true; btn.innerText = "Entrando...";
 
-            btn.disabled = true;
-            btn.innerText = "Verificando Credenciais...";
-
-            const { data, error } = await _supabase.from('perfis_tesoureiros').select('*').eq('cpf', cpfInput).eq('senha', passInput).single();
+            const { data, error } = await _supabase.from('perfis_tesoureiros').select('*').eq('cpf', cpf).eq('senha', pass).single();
 
             if (error || !data) {
-                errorEl.innerText = "Acesso Negado: CPF ou Senha incorretos.";
-                errorEl.classList.remove('hidden');
-                btn.disabled = false;
-                btn.innerText = "Entrar no Sistema";
+                document.getElementById('login-error').innerText = "CPF ou Senha incorretos.";
+                document.getElementById('login-error').classList.remove('hidden');
+                btn.disabled = false; btn.innerText = "Entrar";
             } else {
                 usuarioLogado = data;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('user-display').innerText = usuarioLogado.nome;
                 document.getElementById('user-role').innerText = usuarioLogado.cargo;
-                carregarDadosDoBanco();
+                verificarLogsLocais();
+                setupFilters(); carregarDados();
             }
         }
 
-        function handleLogout() { location.reload(); }
-
-        async function carregarDadosDoBanco() {
+        async function carregarDados() {
             const { data: alunos } = await _supabase.from('alunos_cfo').select('*').order('id', { ascending: true });
             alunosDB = alunos || [];
+            atualizarFinanceiro();
             renderAlunos();
-
-            const { data: logsData } = await _supabase.from('logs_auditoria').select('*').order('created_at', { ascending: false }).limit(50);
+            
+            const { data: logsData } = await _supabase.from('logs_auditoria').select('*').order('created_at', { ascending: false }).limit(100);
             renderLogs(logsData || []);
+        }
+
+        function atualizarFinanceiro() {
+            const calcularTotal = (lista) => lista.reduce((acc, a) => {
+                let soma = 0;
+                if(a.l1_pago) soma += (a.l1_qtd * 400);
+                if(a.l2_pago) soma += (a.l2_qtd * 400);
+                return acc + soma;
+            }, 0);
+
+            const totalGeral = calcularTotal(alunosDB);
+            document.getElementById('total-geral').innerText = totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            const filtrados = filtroAtivo === 'TODOS' ? alunosDB : alunosDB.filter(a => a.pelotao === filtroAtivo);
+            const totalFiltro = calcularTotal(filtrados);
+            document.getElementById('valor-filtro').innerText = totalFiltro.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('label-total-pelotao').innerText = `Exibindo: ${filtroAtivo.replace('/2ª CIA', '')}`;
+        }
+
+        function setupFilters() {
+            const pells = ['TODOS', '1º PEL/2ª CIA', '2º PEL/2ª CIA', '3º PEL/2ª CIA', '4º PEL/2ª CIA', '5º PEL/2ª CIA', '6º PEL/2ª CIA'];
+            document.getElementById('filter-container').innerHTML = pells.map(p => `
+                <button onclick="setFiltro('${p}')" class="filter-btn bg-white border px-3 py-1 rounded text-xs hover:bg-gray-100 ${filtroAtivo === p ? 'filter-btn-active' : ''}">${p.replace('/2ª CIA', '')}</button>
+            `).join('');
+        }
+
+        function setFiltro(p) { filtroAtivo = p; setupFilters(); renderAlunos(p); atualizarFinanceiro(); }
+
+        function renderAlunos(filtro = filtroAtivo) {
+            const body = document.getElementById('lista-alunos-body');
+            body.innerHTML = '';
+            const filtrados = filtro === 'TODOS' ? alunosDB : alunosDB.filter(a => a.pelotao === filtro);
+
+            filtrados.forEach(aluno => {
+                const podeEditar = (usuarioLogado.acesso === "TODOS" || usuarioLogado.acesso === aluno.pelotao);
+                const total = (aluno.l1_pago ? aluno.l1_qtd * 400 : 0) + (aluno.l2_pago ? aluno.l2_qtd * 400 : 0);
+                
+                body.innerHTML += `
+                    <tr class="border-b ${!podeEditar ? 'bg-gray-50 opacity-70' : 'hover:bg-blue-50'}">
+                        <td class="p-4 font-bold text-sm">${aluno.id} - ${aluno.nome}<br><span class="text-[9px] text-gray-400 font-mono">${aluno.pelotao}</span></td>
+                        <td class="p-4 text-center">
+                            <select ${!podeEditar ? 'disabled' : ''} onchange="updateDB(${aluno.id}, 'l1_qtd', this.value)" class="text-xs border rounded p-1"><option value="0" ${aluno.l1_qtd==0?'selected':''}>0</option><option value="1" ${aluno.l1_qtd==1?'selected':''}>1</option><option value="2" ${aluno.l1_qtd==2?'selected':''}>2</option></select>
+                            <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l1_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l1_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1">PAGO</span></label>
+                        </td>
+                        <td class="p-4 text-center">
+                            <select ${!podeEditar ? 'disabled' : ''} onchange="updateDB(${aluno.id}, 'l2_qtd', this.value)" class="text-xs border rounded p-1"><option value="0" ${aluno.l2_qtd==0?'selected':''}>0</option><option value="1" ${aluno.l2_qtd==1?'selected':''}>1</option></select>
+                            <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l2_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l2_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1">PAGO</span></label>
+                        </td>
+                        <td class="p-4 font-bold text-blue-800">R$ ${total}</td>
+                        <td class="p-4 text-center"><span class="text-[9px] font-bold ${total>0?'text-green-600':'text-gray-300'}">${total>0?'PAGANTE':'N/A'}</span></td>
+                    </tr>`;
+            });
+        }
+
+        async function updateDB(id, campo, val) {
+            const idx = alunosDB.findIndex(a => a.id === id);
+            const antigo = alunosDB[idx][campo];
+            const novo = (typeof val === 'boolean') ? val : parseInt(val);
+            if(antigo === novo) return;
+
+            const { error } = await _supabase.from('alunos_cfo').update({ [campo]: novo }).eq('id', id);
+            if(!error) {
+                await _supabase.from('logs_auditoria').insert({
+                    autor: usuarioLogado.nome,
+                    aluno: alunosDB[idx].nome,
+                    detalhe: `${campo}: ${antigo} -> ${novo}`
+                });
+                carregarDados();
+            }
+        }
+
+        function renderLogs(logsData) {
+            document.getElementById('logs-container').innerHTML = logsData.map(l => `
+                <div class="text-[10px] p-2 border-l-2 border-blue-800 bg-white mb-1 flex gap-3">
+                    <span class="text-gray-400">${new Date(l.created_at).toLocaleString()}</span>
+                    <span class="font-bold text-blue-900">${l.autor}</span>
+                    <span>${l.aluno}: ${l.detalhe}</span>
+                </div>`).join('');
+        }
+
+        // --- RELATÓRIO DE IMPRESSÃO FIXADO ---
+        function gerarRelatorio() {
+            const filtrados = filtroAtivo === 'TODOS' ? alunosDB : alunosDB.filter(a => a.pelotao === filtroAtivo);
+            document.getElementById('print-subtitle').innerText = `Relatório: ${filtroAtivo} - Gerado em ${new Date().toLocaleString()}`;
+            
+            const tbody = document.getElementById('print-tbody');
+            tbody.innerHTML = filtrados.map(a => {
+                const total = (a.l1_pago ? a.l1_qtd * 400 : 0) + (a.l2_pago ? a.l2_qtd * 400 : 0);
+                return `<tr>
+                    <td>${a.id} - ${a.nome}</td>
+                    <td>${a.pelotao}</td>
+                    <td>${a.l1_qtd} (${a.l1_pago?'PAGO':'PEND'})</td>
+                    <td>${a.l2_qtd} (${a.l2_pago?'PAGO':'PEND'})</td>
+                    <td>R$ ${total}</td>
+                </tr>`;
+            }).join('');
+            
+            window.print();
+        }
+
+        // --- MIGRAÇÃO DE LOGS ANTIGOS ---
+        function verificarLogsLocais() {
+            const logsLocais = JSON.parse(localStorage.getItem('comasp_v4_logs')) || JSON.parse(localStorage.getItem('comasp_t2_logs')) || [];
+            if(logsLocais.length > 0) document.getElementById('sync-banner').classList.remove('hidden');
+        }
+
+        async function migrarLogsLocais() {
+            const keys = ['comasp_v4_logs', 'comasp_t2_logs', 'comasp_secure_logs', 'comasp_v3_logs'];
+            let todosLogs = [];
+            keys.forEach(k => {
+                const l = JSON.parse(localStorage.getItem(k));
+                if(l) todosLogs = [...todosLogs, ...l];
+            });
+
+            if(todosLogs.length > 0) {
+                alert(`Sincronizando ${todosLogs.length} logs antigos...`);
+                for(const l of todosLogs) {
+                    await _supabase.from('logs_auditoria').insert({
+                        created_at: new Date(l.data || new Date()).toISOString(),
+                        autor: l.autor || l.usuario || "Sistema Antigo",
+                        aluno: l.aluno || "Desconhecido",
+                        detalhe: l.detalhe || "Log recuperado do localstorage"
+                    });
+                }
+                keys.forEach(k => localStorage.removeItem(k));
+                alert("Logs migrados com sucesso!");
+                location.reload();
+            }
         }
 
         function showTab(tab) {
@@ -171,168 +281,7 @@
             document.getElementById('btn-tab-logs').classList.toggle('tab-active', tab === 'logs');
         }
 
-        function filterPelotao(pel) {
-            const btns = document.querySelectorAll('.filter-btn');
-            btns.forEach(b => b.classList.remove('filter-btn-active'));
-            event.target.classList.add('filter-btn-active');
-            renderAlunos(pel);
-        }
-
-        function renderAlunos(filtro = 'TODOS') {
-            const body = document.getElementById('lista-alunos-body');
-            body.innerHTML = '';
-            
-            const filtrados = filtro === 'TODOS' ? alunosDB : alunosDB.filter(a => a.pelotao === filtro);
-
-            filtrados.forEach(aluno => {
-                const podeEditar = (usuarioLogado.acesso === "TODOS" || usuarioLogado.acesso === aluno.pelotao);
-                const total = (aluno.l1_qtd + aluno.l2_qtd) * 400;
-                
-                const row = document.createElement('tr');
-                row.className = `border-b transition-colors ${!podeEditar ? 'bg-gray-50 opacity-80' : 'hover:bg-blue-50'}`;
-                
-                // HTML do Toggle Switch
-                const getToggle = (campoStatus) => `
-                    <label class="relative inline-flex items-center cursor-pointer mt-2" title="Marcar Pagamento">
-                        <input type="checkbox" class="sr-only peer" ${aluno[campoStatus] ? 'checked' : ''} ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, '${campoStatus}', this.checked)">
-                        <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500 ${!podeEditar ? 'opacity-50' : ''}"></div>
-                        <span class="ml-2 text-[10px] font-bold ${aluno[campoStatus] ? 'text-green-600' : 'text-orange-500'} uppercase">${aluno[campoStatus] ? 'Pago' : 'Pendente'}</span>
-                    </label>
-                `;
-
-                row.innerHTML = `
-                    <td class="p-4">
-                        <div class="flex items-center gap-2">
-                            ${!podeEditar ? '🔒' : ''}
-                            <div>
-                                <div class="font-bold text-slate-800 text-sm">${aluno.id} - ${aluno.nome}</div>
-                                <div class="text-[10px] text-gray-400 font-mono">${aluno.pelotao}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="p-4 text-center">
-                        <select ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, 'l1_qtd', this.value)" class="text-xs border rounded p-1 shadow-sm w-full max-w-[100px]">
-                            <option value="0" ${aluno.l1_qtd == 0 ? 'selected' : ''}>0 senhas</option>
-                            <option value="1" ${aluno.l1_qtd == 1 ? 'selected' : ''}>1 senha</option>
-                            <option value="2" ${aluno.l1_qtd == 2 ? 'selected' : ''}>2 senhas</option>
-                        </select>
-                        <br>
-                        ${getToggle('l1_pago')}
-                    </td>
-                    <td class="p-4 text-center">
-                        <select ${!podeEditar ? 'disabled' : ''} onchange="updateData(${aluno.id}, 'l2_qtd', this.value)" class="text-xs border rounded p-1 shadow-sm w-full max-w-[100px]">
-                            <option value="0" ${aluno.l2_qtd == 0 ? 'selected' : ''}>0 senhas</option>
-                            <option value="1" ${aluno.l2_qtd == 1 ? 'selected' : ''}>1 senha</option>
-                        </select>
-                        <br>
-                        ${getToggle('l2_pago')}
-                    </td>
-                    <td class="p-4 font-bold text-blue-900 text-sm">R$ ${total.toLocaleString('pt-BR')}</td>
-                    <td class="p-4 text-center">
-                        <span class="text-[10px] px-2 py-1 rounded font-bold ${aluno.l1_pago && (aluno.l2_qtd == 0 || aluno.l2_pago) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}">
-                            ${aluno.l1_pago && (aluno.l2_qtd == 0 || aluno.l2_pago) ? '✓ FINALIZADO' : 'EM ABERTO'}
-                        </span>
-                    </td>
-                `;
-                body.appendChild(row);
-            });
-        }
-
-        // --- CORREÇÃO DA ATUALIZAÇÃO ---
-        async function updateData(alunoId, campo, valor) {
-            const index = alunosDB.findIndex(a => a.id === alunoId);
-            const aluno = alunosDB[index];
-
-            if (usuarioLogado.acesso !== "TODOS" && usuarioLogado.acesso !== aluno.pelotao) {
-                alert("Sem permissão para este pelotão.");
-                const filtroAtual = document.querySelector('.filter-btn-active').innerText;
-                renderAlunos(filtroAtual === 'Todos' ? 'TODOS' : filtroAtual + '/2ª CIA'); // Reverte visualmente
-                return;
-            }
-
-            const antigo = aluno[campo];
-            
-            // Corrige o bug do parseInt no true/false
-            let novoValor;
-            if (typeof valor === 'boolean') {
-                novoValor = valor;
-            } else {
-                novoValor = parseInt(valor);
-            }
-            
-            if (antigo === novoValor) return;
-
-            // 1. Atualiza localmente
-            alunosDB[index][campo] = novoValor;
-            const filtroAtual = document.querySelector('.filter-btn-active').innerText;
-            renderAlunos(filtroAtual === 'Todos' ? 'TODOS' : filtroAtual + '/2ª CIA');
-
-            // 2. Salva no Supabase
-            await _supabase.from('alunos_cfo').update({ [campo]: novoValor }).eq('id', alunoId);
-            
-            // 3. Log
-            const acaoText = campo.includes('qtd') ? 'Quantidade' : 'Pagamento';
-            const textoAntigo = typeof antigo === 'boolean' ? (antigo ? 'Pago' : 'Pendente') : antigo;
-            const textoNovo = typeof novoValor === 'boolean' ? (novoValor ? 'Pago' : 'Pendente') : novoValor;
-
-            await _supabase.from('logs_auditoria').insert({
-                autor: usuarioLogado.nome,
-                aluno: aluno.nome,
-                detalhe: `${acaoText} (${campo}): ${textoAntigo} ➔ ${textoNovo}`
-            });
-
-            const { data: logsData } = await _supabase.from('logs_auditoria').select('*').order('created_at', { ascending: false }).limit(50);
-            renderLogs(logsData || []);
-        }
-
-        function renderLogs(logsData) {
-            const container = document.getElementById('logs-container');
-            container.innerHTML = logsData.length === 0 ? '<p class="text-gray-400 text-sm">Nenhum registro encontrado.</p>' : '';
-            
-            logsData.forEach(log => {
-                const dataFormatada = new Date(log.created_at).toLocaleString('pt-BR');
-                const item = document.createElement('div');
-                item.className = "text-[11px] p-2 border-l-2 border-blue-600 bg-slate-50 mb-1 rounded flex flex-col md:flex-row gap-1 md:gap-3";
-                item.innerHTML = `
-                    <span class="text-gray-400 font-mono min-w-[130px]">${dataFormatada}</span>
-                    <span class="font-bold text-blue-900 w-24">${log.autor}</span>
-                    <span class="text-gray-600 truncate">Modificou <b>${log.aluno}</b>:</span>
-                    <span class="text-slate-800 italic">${log.detalhe}</span>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        // --- GERAÇÃO DO RELATÓRIO CORRIGIDO ---
-        function gerarRelatorio() {
-            const filtroAtual = document.querySelector('.filter-btn-active').innerText;
-            const filtroTexto = filtroAtual === 'Todos' ? 'TODOS' : filtroAtual + '/2ª CIA';
-            const alunosParaImprimir = filtroTexto === 'TODOS' ? alunosDB : alunosDB.filter(a => a.pelotao === filtroTexto);
-
-            document.getElementById('print-date').innerText = `Gerado em: ${new Date().toLocaleString('pt-BR')} - Filtro: ${filtroAtual}`;
-            const tbody = document.getElementById('print-tbody');
-            tbody.innerHTML = '';
-
-            alunosParaImprimir.forEach(a => {
-                const total = (a.l1_qtd + a.l2_qtd) * 400;
-                const statusL1 = a.l1_pago ? '<span class="status-pago">Pago</span>' : '<span class="status-pendente">Pendente</span>';
-                const statusL2 = a.l2_pago ? '<span class="status-pago">Pago</span>' : '<span class="status-pendente">Pendente</span>';
-                const quitado = a.l1_pago && (a.l2_qtd == 0 || a.l2_pago) ? 'FINALIZADO' : 'EM ABERTO';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${a.id}</b> - ${a.nome}</td>
-                        <td>${a.pelotao}</td>
-                        <td>${a.l1_qtd} senhas - ${statusL1}</td>
-                        <td>${a.l2_qtd} senhas - ${statusL2}</td>
-                        <td><b>R$ ${total.toLocaleString('pt-BR')}</b></td>
-                        <td><strong>${quitado}</strong></td>
-                    </tr>
-                `;
-            });
-
-            window.print();
-        }
+        function handleLogout() { location.reload(); }
     </script>
 </body>
 </html>
