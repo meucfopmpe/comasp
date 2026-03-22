@@ -48,7 +48,7 @@
                 <input type="password" id="login-pass" class="w-full p-2 border rounded" placeholder="Senha">
                 <button onclick="handleLogin()" id="btn-entrar" class="w-full bg-blue-700 text-white py-2 rounded font-bold hover:bg-blue-800 transition">Entrar</button>
             </div>
-            <p id="login-error" class="text-red-500 text-xs mt-4 text-center hidden"></p>
+            <p id="login-error" class="text-red-500 text-xs mt-4 text-center hidden font-bold"></p>
         </div>
     </div>
 
@@ -107,6 +107,9 @@
             </div>
 
             <div id="tab-logs" class="hidden">
+                <div id="sync-banner" class="mb-4 bg-orange-100 border border-orange-300 p-3 rounded text-sm hidden">
+                    ⚠️ Encontramos logs antigos neste computador. <button onclick="migrarLogsLocais()" class="font-bold underline text-orange-800">Clique aqui para salvar no banco de dados.</button>
+                </div>
                 <div class="bg-white rounded shadow p-4 max-w-5xl mx-auto space-y-1" id="logs-container"></div>
             </div>
         </main>
@@ -121,17 +124,14 @@
         let alunosDB = [];
         let filtroAtivo = 'TODOS';
 
-        // --- SISTEMA DE IDENTIFICAÇÃO DO APARELHO ---
         async function getDeviceInfo() {
             let ip = 'Não detectado';
             try {
-                // Tenta pegar o IP público via API gratuita
                 const res = await fetch('https://api.ipify.org?format=json');
                 const data = await res.json();
                 ip = data.ip;
             } catch(e) { console.log("Erro ao buscar IP", e); }
 
-            // Verifica se o aparelho já tem um identificador salvo. Se não tiver, cria um fixo.
             let deviceId = localStorage.getItem('comasp_device_id');
             if (!deviceId) {
                 deviceId = 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase() + '-' + Date.now();
@@ -145,13 +145,15 @@
             const cpf = document.getElementById('login-cpf').value.replace(/\D/g, "");
             const pass = document.getElementById('login-pass').value;
             const btn = document.getElementById('btn-entrar');
+            const errorEl = document.getElementById('login-error');
+            
             btn.disabled = true; btn.innerText = "Entrando...";
 
             const { data, error } = await _supabase.from('perfis_tesoureiros').select('*').eq('cpf', cpf).eq('senha', pass).single();
 
             if (error || !data) {
-                document.getElementById('login-error').innerText = "CPF ou Senha incorretos.";
-                document.getElementById('login-error').classList.remove('hidden');
+                errorEl.innerText = "Acesso Negado: CPF ou Senha incorretos.";
+                errorEl.classList.remove('hidden');
                 btn.disabled = false; btn.innerText = "Entrar";
             } else {
                 usuarioLogado = data;
@@ -162,16 +164,25 @@
                 document.getElementById('user-role').innerText = usuarioLogado.cargo;
                 document.getElementById('user-display-mobile').innerText = usuarioLogado.nome;
 
-                // REGISTRA O LOGIN NA TABELA DE ACESSOS COM IP E DEVICE ID
-                const devInfo = await getDeviceInfo();
-                await _supabase.from('logs').insert({
-                    nome_tesoureiro: usuarioLogado.nome,
-                    tipo_acao: 'LOGIN',
-                    ip_address: devInfo.ip,
-                    device_id: devInfo.deviceId,
-                    detalhes: 'Acesso realizado com sucesso. SO/Navegador: ' + devInfo.userAgent
-                });
+                // Captura info do aparelho e tenta gravar o log sem travar a tela
+                try {
+                    const devInfo = await getDeviceInfo();
+                    const { error: logError } = await _supabase.from('logs').insert({
+                        nome_tesoureiro: usuarioLogado.nome,
+                        tipo_acao: 'LOGIN',
+                        ip_address: devInfo.ip,
+                        device_id: devInfo.deviceId,
+                        detalhes: 'Acesso realizado com sucesso. SO/Navegador: ' + devInfo.userAgent
+                    });
+                    
+                    if(logError) {
+                        console.error("Erro interno ao gravar log de acesso na tabela 'logs'. O acesso foi liberado mesmo assim.", logError);
+                    }
+                } catch(e) {
+                    console.error("Erro na rotina de device info.", e);
+                }
 
+                verificarLogsLocais();
                 setupFilters(); 
                 carregarDados();
             }
@@ -227,11 +238,11 @@
                         <td class="p-4 font-bold text-sm">${aluno.id} - ${aluno.nome}<br><span class="text-[9px] text-gray-400 font-mono">${aluno.pelotao}</span></td>
                         <td class="p-4 text-center">
                             <select ${!podeEditar ? 'disabled' : ''} onchange="updateDB(${aluno.id}, 'l1_qtd', this.value)" class="text-xs border rounded p-1"><option value="0" ${aluno.l1_qtd==0?'selected':''}>0</option><option value="1" ${aluno.l1_qtd==1?'selected':''}>1</option><option value="2" ${aluno.l1_qtd==2?'selected':''}>2</option></select>
-                            <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l1_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l1_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1">PAGO</span></label>
+                            <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l1_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l1_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1 font-bold ${aluno.l1_pago ? 'text-green-600' : 'text-gray-400'}">PAGO</span></label>
                         </td>
                         <td class="p-4 text-center">
                             <select ${!podeEditar ? 'disabled' : ''} onchange="updateDB(${aluno.id}, 'l2_qtd', this.value)" class="text-xs border rounded p-1"><option value="0" ${aluno.l2_qtd==0?'selected':''}>0</option><option value="1" ${aluno.l2_qtd==1?'selected':''}>1</option></select>
-                            <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l2_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l2_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1">PAGO</span></label>
+                            <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l2_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l2_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1 font-bold ${aluno.l2_pago ? 'text-green-600' : 'text-gray-400'}">PAGO</span></label>
                         </td>
                         <td class="p-4 font-bold text-blue-800">R$ ${total}</td>
                         <td class="p-4 text-center"><span class="text-[9px] font-bold ${total>0?'text-green-600':'text-gray-300'}">${total>0?'PAGANTE':'N/A'}</span></td>
@@ -251,7 +262,6 @@
 
             const { error } = await _supabase.from('alunos_cfo').update({ [campo]: novo }).eq('id', id);
             if(!error) {
-                // Registra a alteração na auditoria com o IP e Device ID
                 const devInfo = await getDeviceInfo();
                 const acao = typeof novo === 'boolean' ? (novo ? 'Marcou PAGO' : 'Marcou PENDENTE') : `Qtd para ${novo}`;
                 
@@ -295,6 +305,36 @@
             }).join('');
             
             window.print();
+        }
+
+        function verificarLogsLocais() {
+            const logsLocais = JSON.parse(localStorage.getItem('comasp_v4_logs')) || JSON.parse(localStorage.getItem('comasp_t2_logs')) || [];
+            if(logsLocais.length > 0) document.getElementById('sync-banner').classList.remove('hidden');
+        }
+
+        async function migrarLogsLocais() {
+            const keys = ['comasp_v4_logs', 'comasp_t2_logs', 'comasp_secure_logs', 'comasp_v3_logs'];
+            let todosLogs = [];
+            keys.forEach(k => {
+                const l = JSON.parse(localStorage.getItem(k));
+                if(l) todosLogs = [...todosLogs, ...l];
+            });
+
+            if(todosLogs.length > 0) {
+                alert(`Sincronizando ${todosLogs.length} logs antigos... isso pode levar uns segundos.`);
+                for(const l of todosLogs) {
+                    await _supabase.from('logs_auditoria').insert({
+                        created_at: new Date(l.data || new Date()).toISOString(),
+                        autor: l.autor || l.usuario || "Sistema Antigo",
+                        aluno: l.aluno || "Desconhecido",
+                        detalhe: l.detalhe || "Log recuperado"
+                    });
+                }
+                keys.forEach(k => localStorage.removeItem(k));
+                alert("Logs migrados com sucesso!");
+                carregarDados();
+                document.getElementById('sync-banner').classList.add('hidden');
+            }
         }
 
         function showTab(tab) {
