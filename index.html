@@ -107,9 +107,6 @@
             </div>
 
             <div id="tab-logs" class="hidden">
-                <div id="sync-banner" class="mb-4 bg-orange-100 border border-orange-300 p-3 rounded text-sm hidden">
-                    ⚠️ Encontramos logs antigos neste computador. <button onclick="migrarLogsLocais()" class="font-bold underline text-orange-800">Clique aqui para salvar no banco de dados.</button>
-                </div>
                 <div class="bg-white rounded shadow p-4 max-w-5xl mx-auto space-y-1" id="logs-container"></div>
             </div>
         </main>
@@ -123,6 +120,26 @@
         let usuarioLogado = null;
         let alunosDB = [];
         let filtroAtivo = 'TODOS';
+
+        // --- SISTEMA DE IDENTIFICAÇÃO DO APARELHO ---
+        async function getDeviceInfo() {
+            let ip = 'Não detectado';
+            try {
+                // Tenta pegar o IP público via API gratuita
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                ip = data.ip;
+            } catch(e) { console.log("Erro ao buscar IP", e); }
+
+            // Verifica se o aparelho já tem um identificador salvo. Se não tiver, cria um fixo.
+            let deviceId = localStorage.getItem('comasp_device_id');
+            if (!deviceId) {
+                deviceId = 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase() + '-' + Date.now();
+                localStorage.setItem('comasp_device_id', deviceId);
+            }
+
+            return { ip, deviceId, userAgent: navigator.userAgent };
+        }
 
         async function handleLogin() {
             const cpf = document.getElementById('login-cpf').value.replace(/\D/g, "");
@@ -141,12 +158,20 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 
-                // Agora estes IDs existem e não darão erro!
                 document.getElementById('user-display').innerText = usuarioLogado.nome;
                 document.getElementById('user-role').innerText = usuarioLogado.cargo;
                 document.getElementById('user-display-mobile').innerText = usuarioLogado.nome;
 
-                verificarLogsLocais();
+                // REGISTRA O LOGIN NA TABELA DE ACESSOS COM IP E DEVICE ID
+                const devInfo = await getDeviceInfo();
+                await _supabase.from('logs').insert({
+                    nome_tesoureiro: usuarioLogado.nome,
+                    tipo_acao: 'LOGIN',
+                    ip_address: devInfo.ip,
+                    device_id: devInfo.deviceId,
+                    detalhes: 'Acesso realizado com sucesso. SO/Navegador: ' + devInfo.userAgent
+                });
+
                 setupFilters(); 
                 carregarDados();
             }
@@ -220,21 +245,25 @@
             const novo = (typeof val === 'boolean') ? val : parseInt(val);
             if(antigo === novo) return;
 
-            // Atualiza UI Imediatamente (otimista)
             alunosDB[idx][campo] = novo;
             atualizarFinanceiro();
             renderAlunos();
 
             const { error } = await _supabase.from('alunos_cfo').update({ [campo]: novo }).eq('id', id);
             if(!error) {
+                // Registra a alteração na auditoria com o IP e Device ID
+                const devInfo = await getDeviceInfo();
                 const acao = typeof novo === 'boolean' ? (novo ? 'Marcou PAGO' : 'Marcou PENDENTE') : `Qtd para ${novo}`;
+                
                 await _supabase.from('logs_auditoria').insert({
                     autor: usuarioLogado.nome,
                     aluno: alunosDB[idx].nome,
-                    detalhe: `${campo}: ${acao}`
+                    detalhe: `${campo}: ${acao}`,
+                    ip_address: devInfo.ip,
+                    device_id: devInfo.deviceId,
+                    user_agent: devInfo.userAgent
                 });
                 
-                // Recarrega Logs Silenciosamente
                 const { data: logsData } = await _supabase.from('logs_auditoria').select('*').order('created_at', { ascending: false }).limit(100);
                 renderLogs(logsData || []);
             }
@@ -261,41 +290,11 @@
                     <td>${a.pelotao}</td>
                     <td>${a.l1_qtd} (${a.l1_pago?'PAGO':'PEND'})</td>
                     <td>${a.l2_qtd} (${a.l2_pago?'PAGO':'PEND'})</td>
-                    <td>R$ ${total.toLocaleString('pt-BR')}</td>
+                    <td>R$ ${total}</td>
                 </tr>`;
             }).join('');
             
             window.print();
-        }
-
-        function verificarLogsLocais() {
-            const logsLocais = JSON.parse(localStorage.getItem('comasp_v4_logs')) || JSON.parse(localStorage.getItem('comasp_t2_logs')) || [];
-            if(logsLocais.length > 0) document.getElementById('sync-banner').classList.remove('hidden');
-        }
-
-        async function migrarLogsLocais() {
-            const keys = ['comasp_v4_logs', 'comasp_t2_logs', 'comasp_secure_logs', 'comasp_v3_logs'];
-            let todosLogs = [];
-            keys.forEach(k => {
-                const l = JSON.parse(localStorage.getItem(k));
-                if(l) todosLogs = [...todosLogs, ...l];
-            });
-
-            if(todosLogs.length > 0) {
-                alert(`Sincronizando ${todosLogs.length} logs antigos... isso pode levar uns segundos.`);
-                for(const l of todosLogs) {
-                    await _supabase.from('logs_auditoria').insert({
-                        created_at: new Date(l.data || new Date()).toISOString(),
-                        autor: l.autor || l.usuario || "Sistema Antigo",
-                        aluno: l.aluno || "Desconhecido",
-                        detalhe: l.detalhe || "Log recuperado"
-                    });
-                }
-                keys.forEach(k => localStorage.removeItem(k));
-                alert("Logs migrados com sucesso!");
-                carregarDados();
-                document.getElementById('sync-banner').classList.add('hidden');
-            }
         }
 
         function showTab(tab) {
