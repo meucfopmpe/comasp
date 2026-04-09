@@ -253,6 +253,13 @@
         }
 
         async function updateDB(id, campo, val) {
+            // TRAVA EXTRA DE SEGURANÇA
+            if (usuarioLogado.cpf !== "06085534418") {
+                alert("Apenas o Tesoureiro Adjunto (Marinho) tem permissão para editar os pagamentos.");
+                carregarDados(); // Recarrega os dados originais se alguém tentar forçar o clique
+                return;
+            }
+
             const idx = alunosDB.findIndex(a => a.id === id);
             const antigo = alunosDB[idx][campo];
             const novo = (typeof val === 'boolean') ? val : parseInt(val);
