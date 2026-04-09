@@ -230,7 +230,9 @@
             const filtrados = filtro === 'TODOS' ? alunosDB : alunosDB.filter(a => a.pelotao === filtro);
 
             filtrados.forEach(aluno => {
-                const podeEditar = (usuarioLogado.acesso === "TODOS" || usuarioLogado.acesso === aluno.pelotao);
+                // NOVA REGRA SIMPLES: Apenas o CPF do Marinho pode editar
+                const podeEditar = (usuarioLogado.cpf === "06085534418"); 
+                
                 const total = (aluno.l1_pago ? aluno.l1_qtd * 400 : 0) + (aluno.l2_pago ? aluno.l2_qtd * 400 : 0);
                 
                 body.innerHTML += `
