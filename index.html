@@ -33,6 +33,7 @@
                     <th>PELOTÃO</th>
                     <th>L1 (QTD/PG)</th>
                     <th>L2 (QTD/PG)</th>
+                    <th>L3 (QTD/PG)</th>
                     <th>TOTAL PAGO</th>
                 </tr>
             </thead>
@@ -97,9 +98,16 @@
                 <div class="mb-4 flex flex-wrap gap-2" id="filter-container"></div>
                 
                 <div class="bg-white rounded shadow overflow-x-auto border border-gray-200">
-                    <table class="w-full text-left border-collapse min-w-[900px]">
+                    <table class="w-full text-left border-collapse min-w-[1050px]">
                         <thead class="bg-slate-100 border-b text-[11px] font-bold uppercase text-gray-500">
-                            <tr><th class="p-4">Nº / Nome</th><th class="p-4 text-center">Lote 1 (Max 2)</th><th class="p-4 text-center">Lote 2 (Max 1)</th><th class="p-4">Total</th><th class="p-4 text-center">Ação</th></tr>
+                            <tr>
+                                <th class="p-4">Nº / Nome</th>
+                                <th class="p-4 text-center">Lote 1 (Max 2)</th>
+                                <th class="p-4 text-center">Lote 2 (Max 1)</th>
+                                <th class="p-4 text-center text-blue-700">Lote 3 (Max 10)</th>
+                                <th class="p-4">Total</th>
+                                <th class="p-4 text-center">Ação</th>
+                            </tr>
                         </thead>
                         <tbody id="lista-alunos-body"></tbody>
                     </table>
@@ -164,7 +172,6 @@
                 document.getElementById('user-role').innerText = usuarioLogado.cargo;
                 document.getElementById('user-display-mobile').innerText = usuarioLogado.nome;
 
-                // Captura info do aparelho e tenta gravar o log sem travar a tela
                 try {
                     const devInfo = await getDeviceInfo();
                     const { error: logError } = await _supabase.from('logs').insert({
@@ -203,6 +210,7 @@
                 let soma = 0;
                 if(a.l1_pago) soma += (a.l1_qtd * 400);
                 if(a.l2_pago) soma += (a.l2_qtd * 400);
+                if(a.l3_pago) soma += (a.l3_qtd * 400);
                 return acc + soma;
             }, 0);
 
@@ -230,22 +238,37 @@
             const filtrados = filtro === 'TODOS' ? alunosDB : alunosDB.filter(a => a.pelotao === filtro);
 
             filtrados.forEach(aluno => {
-                // NOVA REGRA SIMPLES: Apenas o CPF do Marinho pode editar
                 const podeEditar = (usuarioLogado.cpf === "06085534418"); 
                 
-                const total = (aluno.l1_pago ? aluno.l1_qtd * 400 : 0) + (aluno.l2_pago ? aluno.l2_qtd * 400 : 0);
+                const total = (aluno.l1_pago ? aluno.l1_qtd * 400 : 0) + (aluno.l2_pago ? aluno.l2_qtd * 400 : 0) + (aluno.l3_pago ? aluno.l3_qtd * 400 : 0);
+                
+                // Gera as opções de 0 a 10 para o Lote 3 dinamicamente
+                let l3Options = '';
+                for(let i=0; i<=10; i++) {
+                    l3Options += `<option value="${i}" ${aluno.l3_qtd == i ? 'selected' : ''}>${i}</option>`;
+                }
                 
                 body.innerHTML += `
                     <tr class="border-b ${!podeEditar ? 'bg-gray-50 opacity-70' : 'hover:bg-blue-50'}">
                         <td class="p-4 font-bold text-sm">${aluno.id} - ${aluno.nome}<br><span class="text-[9px] text-gray-400 font-mono">${aluno.pelotao}</span></td>
-                        <td class="p-4 text-center">
+                        
+                        <td class="p-4 text-center border-x">
                             <select ${!podeEditar ? 'disabled' : ''} onchange="updateDB(${aluno.id}, 'l1_qtd', this.value)" class="text-xs border rounded p-1"><option value="0" ${aluno.l1_qtd==0?'selected':''}>0</option><option value="1" ${aluno.l1_qtd==1?'selected':''}>1</option><option value="2" ${aluno.l1_qtd==2?'selected':''}>2</option></select>
                             <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l1_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l1_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1 font-bold ${aluno.l1_pago ? 'text-green-600' : 'text-gray-400'}">PAGO</span></label>
                         </td>
-                        <td class="p-4 text-center">
+                        
+                        <td class="p-4 text-center border-r">
                             <select ${!podeEditar ? 'disabled' : ''} onchange="updateDB(${aluno.id}, 'l2_qtd', this.value)" class="text-xs border rounded p-1"><option value="0" ${aluno.l2_qtd==0?'selected':''}>0</option><option value="1" ${aluno.l2_qtd==1?'selected':''}>1</option></select>
                             <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l2_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l2_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1 font-bold ${aluno.l2_pago ? 'text-green-600' : 'text-gray-400'}">PAGO</span></label>
                         </td>
+
+                        <td class="p-4 text-center border-r bg-blue-50/40">
+                            <select ${!podeEditar ? 'disabled' : ''} onchange="updateDB(${aluno.id}, 'l3_qtd', this.value)" class="text-xs border rounded p-1">
+                                ${l3Options}
+                            </select>
+                            <label class="flex items-center justify-center mt-1 cursor-pointer"><input type="checkbox" ${aluno.l3_pago?'checked':''} ${!podeEditar?'disabled':''} onchange="updateDB(${aluno.id}, 'l3_pago', this.checked)" class="w-3 h-3 text-green-600"> <span class="text-[10px] ml-1 font-bold ${aluno.l3_pago ? 'text-green-600' : 'text-gray-400'}">PAGO</span></label>
+                        </td>
+
                         <td class="p-4 font-bold text-blue-800">R$ ${total}</td>
                         <td class="p-4 text-center"><span class="text-[9px] font-bold ${total>0?'text-green-600':'text-gray-300'}">${total>0?'PAGANTE':'N/A'}</span></td>
                     </tr>`;
@@ -253,10 +276,9 @@
         }
 
         async function updateDB(id, campo, val) {
-            // TRAVA EXTRA DE SEGURANÇA
             if (usuarioLogado.cpf !== "06085534418") {
                 alert("Apenas o Tesoureiro Adjunto (Marinho) tem permissão para editar os pagamentos.");
-                carregarDados(); // Recarrega os dados originais se alguém tentar forçar o clique
+                carregarDados();
                 return;
             }
 
@@ -303,12 +325,13 @@
             
             const tbody = document.getElementById('print-tbody');
             tbody.innerHTML = filtrados.map(a => {
-                const total = (a.l1_pago ? a.l1_qtd * 400 : 0) + (a.l2_pago ? a.l2_qtd * 400 : 0);
+                const total = (a.l1_pago ? a.l1_qtd * 400 : 0) + (a.l2_pago ? a.l2_qtd * 400 : 0) + (a.l3_pago ? a.l3_qtd * 400 : 0);
                 return `<tr>
                     <td>${a.id} - ${a.nome}</td>
                     <td>${a.pelotao}</td>
                     <td>${a.l1_qtd} (${a.l1_pago?'PAGO':'PEND'})</td>
                     <td>${a.l2_qtd} (${a.l2_pago?'PAGO':'PEND'})</td>
+                    <td>${a.l3_qtd || 0} (${a.l3_pago?'PAGO':'PEND'})</td>
                     <td>R$ ${total}</td>
                 </tr>`;
             }).join('');
